@@ -11,3 +11,7 @@
 
 - [KMP](kmp.md)
 
+# Miscellaneous
+
+- [Matrix](matrix.md)
+

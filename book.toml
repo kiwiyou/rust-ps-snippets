@@ -7,3 +7,7 @@ title = "Rust PS Snippets"
 
 [rust]
 edition = "2021"
+
+[output.html.playground]
+editable = true
+

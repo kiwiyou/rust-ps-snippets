@@ -76,7 +76,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">1.</strong> Adjacency Array</a></li><li class="chapter-item expanded "><a href="dfs.html"><strong aria-hidden="true">2.</strong> Depth-First Search</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">1.</strong> Adjacency Array</a></li><li class="chapter-item expanded "><a href="dfs.html"><strong aria-hidden="true">2.</strong> Depth-First Search</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">3.</strong> KMP</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -338,6 +338,113 @@ dfs! {
 </span><span class="boring">}
 </span><span class="boring">use dfs::dfs;
 </span></code></pre></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="kmp"><a class="header" href="#kmp">KMP</a></h1>
+<pre><code class="language-rust noplayground">
+struct Kmp&lt;'a, I, T&gt; {
+    pi: Vec&lt;u32&gt;,
+    haystack: I,
+    needle: &amp;'a [T],
+    i: usize,
+}
+
+impl&lt;'a, I, T&gt; Kmp&lt;'a, I, T&gt; {
+    fn new&lt;H&gt;(haystack: H, needle: &amp;'a [T], pi: Vec&lt;u32&gt;) -&gt; Self
+    where
+        H: IntoIterator&lt;IntoIter = I&gt;,
+    {
+        Self {
+            pi,
+            haystack: haystack.into_iter(),
+            needle,
+            i: 0,
+        }
+    }
+}
+
+impl&lt;I, T, B&gt; Iterator for Kmp&lt;'_, I, T&gt;
+where
+    T: PartialEq,
+    B: std::borrow::Borrow&lt;T&gt;,
+    I: Iterator&lt;Item = B&gt;,
+{
+    type Item = usize;
+
+    fn next(&amp;mut self) -&gt; Option&lt;Self::Item&gt; {
+        let c = self.haystack.next()?;
+        loop {
+            if self.needle.get(self.i) == Some(c.borrow()) {
+                self.i += 1;
+                break;
+            } else if self.i == 0 {
+                break;
+            } else {
+                self.i = self.pi[self.i - 1] as usize;
+            }
+        }
+        Some(self.i)
+    }
+}
+</code></pre>
+<h2 id="example-1"><a class="header" href="#example-1">Example</a></h2>
+<pre><pre class="playground"><code class="language-rust edition2021"><span class="boring">fn main() {
+</span>let haystack = b&quot;AABABAABABAA&quot;;
+let needle = b&quot;ABA&quot;;
+let mut kmp = Kmp::new(needle, needle, vec![0]);
+while let Some(pi) = kmp.next() {
+    kmp.pi.push(pi as u32);
+}
+for (i, len) in Kmp::new(haystack, needle, kmp.pi).enumerate() {
+    if len &gt; 0 {
+        println!(&quot;Partial match [{}, {}]&quot;, i + 1 - len, i);
+    }
+}
+<span class="boring">}
+</span><span class="boring">
+</span><span class="boring">struct Kmp&lt;'a, I, T&gt; {
+</span><span class="boring">    pi: Vec&lt;u32&gt;,
+</span><span class="boring">    haystack: I,
+</span><span class="boring">    needle: &amp;'a [T],
+</span><span class="boring">    i: usize,
+</span><span class="boring">}
+</span><span class="boring">
+</span><span class="boring">impl&lt;'a, I, T&gt; Kmp&lt;'a, I, T&gt; {
+</span><span class="boring">    fn new&lt;H&gt;(haystack: H, needle: &amp;'a [T], pi: Vec&lt;u32&gt;) -&gt; Self
+</span><span class="boring">    where
+</span><span class="boring">        H: IntoIterator&lt;IntoIter = I&gt;,
+</span><span class="boring">    {
+</span><span class="boring">        Self {
+</span><span class="boring">            pi,
+</span><span class="boring">            haystack: haystack.into_iter(),
+</span><span class="boring">            needle,
+</span><span class="boring">            i: 0,
+</span><span class="boring">        }
+</span><span class="boring">    }
+</span><span class="boring">}
+</span><span class="boring">
+</span><span class="boring">impl&lt;I, T, B&gt; Iterator for Kmp&lt;'_, I, T&gt;
+</span><span class="boring">where
+</span><span class="boring">    T: PartialEq,
+</span><span class="boring">    B: std::borrow::Borrow&lt;T&gt;,
+</span><span class="boring">    I: Iterator&lt;Item = B&gt;,
+</span><span class="boring">{
+</span><span class="boring">    type Item = usize;
+</span><span class="boring">
+</span><span class="boring">    fn next(&amp;mut self) -&gt; Option&lt;Self::Item&gt; {
+</span><span class="boring">        let c = self.haystack.next()?;
+</span><span class="boring">        loop {
+</span><span class="boring">            if self.needle.get(self.i) == Some(c.borrow()) {
+</span><span class="boring">                self.i += 1;
+</span><span class="boring">                break;
+</span><span class="boring">            } else if self.i == 0 {
+</span><span class="boring">                break;
+</span><span class="boring">            } else {
+</span><span class="boring">                self.i = self.pi[self.i - 1] as usize;
+</span><span class="boring">            }
+</span><span class="boring">        }
+</span><span class="boring">        Some(self.i)
+</span><span class="boring">    }
+</span><span class="boring">}
+</span></code></pre></pre>
 
                     </main>
 
@@ -356,6 +463,11 @@ dfs! {
         <script type="text/javascript">
             window.playground_copyable = true;
         </script>
+        <script src="ace.js" type="text/javascript" charset="utf-8"></script>
+        <script src="editor.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mode-rust.js" type="text/javascript" charset="utf-8"></script>
+        <script src="theme-dawn.js" type="text/javascript" charset="utf-8"></script>
+        <script src="theme-tomorrow_night.js" type="text/javascript" charset="utf-8"></script>
         <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="searcher.js" type="text/javascript" charset="utf-8"></script>

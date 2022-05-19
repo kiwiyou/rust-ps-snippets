@@ -2,6 +2,10 @@
 
 [Introduction](README.md)
 
+# Data Structures
+
+- [Segment Tree](segment-tree.md)
+
 # Graphs
 
 - [Adjacency Array](adjacency-array.md)

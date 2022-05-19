@@ -76,7 +76,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">1.</strong> Adjacency Array</a></li><li class="chapter-item expanded "><a href="dfs.html"><strong aria-hidden="true">2.</strong> Depth-First Search</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">3.</strong> KMP</a></li><li class="chapter-item expanded affix "><li class="part-title">Miscellaneous</li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">4.</strong> Matrix</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">1.</strong> Segment Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">2.</strong> Adjacency Array</a></li><li class="chapter-item expanded "><a href="dfs.html"><strong aria-hidden="true">3.</strong> Depth-First Search</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">4.</strong> KMP</a></li><li class="chapter-item expanded affix "><li class="part-title">Miscellaneous</li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">5.</strong> Matrix</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -139,6 +139,100 @@
 <p><em>Rust has <strong>fancy</strong> ability to abstract algorithms. Why don't we use it in PS domain?</em></p>
 <p>Many algorithms and data structures are exhausting and boring to implement every time.
 You can copy ready-made implementations here and focus on the logic.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="segment-tree"><a class="header" href="#segment-tree">Segment Tree</a></h1>
+<pre><code class="language-rust noplayground">struct SegTree&lt;C, A, T&gt; {
+    e: T,
+    v: Vec&lt;T&gt;,
+    offset: usize,
+    combine: C,
+    apply: A,
+}
+
+impl&lt;C, A, T&gt; SegTree&lt;C, A, T&gt;
+where
+    T: Copy,
+    C: Fn(T, T) -&gt; T,
+{
+    fn new&lt;I&gt;(n: usize, e: T, combine: C, apply: A, init: I) -&gt; Self
+    where
+        I: IntoIterator&lt;Item = T&gt;,
+    {
+        let offset = n.next_power_of_two();
+        let mut v = vec![e; offset];
+        v.extend(init.into_iter().take(offset));
+        v.resize(offset * 2, e);
+        Self {
+            e,
+            v,
+            offset,
+            combine,
+            apply,
+        }
+    }
+
+    fn query&lt;B: std::ops::RangeBounds&lt;usize&gt;&gt;(&amp;self, range: B) -&gt; T {
+        use std::ops::Bound::*;
+        let mut l = self.offset
+            + match range.start_bound() {
+                Included(&amp;x) =&gt; x,
+                Excluded(&amp;x) =&gt; x + 1,
+                Unbounded =&gt; 0,
+            };
+        let mut r = self.offset
+            + match range.end_bound() {
+                Included(&amp;x) =&gt; x + 1,
+                Excluded(&amp;x) =&gt; x,
+                Unbounded =&gt; self.offset,
+            };
+        let mut lsum = self.e;
+        let mut rsum = self.e;
+        while l &lt; r {
+            if l &amp; 1 != 0 {
+                lsum = (self.combine)(lsum, self.v[l]);
+                l += 1;
+            }
+            if r &amp; 1 != 0 {
+                r -= 1;
+                rsum = (self.combine)(self.v[r], rsum);
+            }
+            l &gt;&gt;= 1;
+            r &gt;&gt;= 1;
+        }
+        (self.combind)(lsum, rsum)
+    }
+
+    fn update&lt;U&gt;(&amp;mut self, mut i: usize, u: U)
+    where
+        U: Copy,
+        A: Fn(&amp;mut T, U),
+    {
+        i += self.offset;
+        (self.apply)(&amp;mut self.v[i], u);
+        while i &gt; 1 {
+            i &gt;&gt;= 1;
+            self.v[i] = Op::combine(self.v[i &lt;&lt; 1], self.v[i &lt;&lt; 1 | 1]);
+        }
+    }
+
+    fn partition_point&lt;P: Fn(T) -&gt; bool&gt;(&amp;self, pred: P) -&gt; usize {
+        let mut p = 1;
+        if pred(self.v[p]) {
+            self.offset
+        } else {
+            let mut pivot = Op::e();
+            while p &lt; self.offset {
+                p &lt;&lt;= 1;
+                let test = Op::combine(pivot, self.v[p]);
+                if pred(test) {
+                    pivot = test;
+                    p |= 1;
+                }
+            }
+            p - self.offset
+        }
+    }
+}
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="adjacency-array"><a class="header" href="#adjacency-array">Adjacency Array</a></h1>
 <p>Graphs are represented with <strong>Adjacency Array</strong>s.
 All edges on the graph are stored in a single array

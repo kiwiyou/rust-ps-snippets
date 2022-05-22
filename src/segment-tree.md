@@ -59,7 +59,7 @@ where
             l >>= 1;
             r >>= 1;
         }
-        (self.combind)(lsum, rsum)
+        (self.combine)(lsum, rsum)
     }
 
     fn update<U>(&mut self, mut i: usize, u: U)
@@ -71,7 +71,7 @@ where
         (self.apply)(&mut self.v[i], u);
         while i > 1 {
             i >>= 1;
-            self.v[i] = Op::combine(self.v[i << 1], self.v[i << 1 | 1]);
+            self.v[i] = (self.combine)(self.v[i << 1], self.v[i << 1 | 1]);
         }
     }
 
@@ -80,10 +80,10 @@ where
         if pred(self.v[p]) {
             self.offset
         } else {
-            let mut pivot = Op::e();
+            let mut pivot = self.e;
             while p < self.offset {
                 p <<= 1;
-                let test = Op::combine(pivot, self.v[p]);
+                let test = (self.combine)(pivot, self.v[p]);
                 if pred(test) {
                     pivot = test;
                     p |= 1;

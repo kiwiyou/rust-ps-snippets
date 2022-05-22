@@ -10,6 +10,7 @@
 
 - [Adjacency Array](adjacency-array.md)
 - [Depth-First Search](dfs.md)
+- [Strongly Connected Components](scc.md)
 
 # Strings
 

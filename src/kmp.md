@@ -54,7 +54,7 @@ where
 # fn main() {
 let haystack = b"AABABAABABAA";
 let needle = b"ABA";
-let mut kmp = Kmp::new(needle, needle, vec![0]);
+let mut kmp = Kmp::new(&needle[1..], needle, vec![0]);
 while let Some(pi) = kmp.next() {
     kmp.pi.push(pi as u32);
 }

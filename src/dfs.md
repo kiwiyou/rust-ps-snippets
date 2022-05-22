@@ -4,20 +4,19 @@
 mod dfs {
     macro_rules! dfs {
         {
-            ($g:expr, $node:expr)
+            ($g:ident, $node:expr)
             |$from:ident, $to:ident, $data:ident, $edge:ident| =>
             $begin:expr => $before:expr => recurse => $after:expr => $end:expr
         } => {
-            let g = $g;
             let $from: usize = $node;
             $begin;
             let from = $from as u32;
-            let mut stack = vec![(from, g.head[$from])];
+            let mut stack = vec![(from, $g.head[$from])];
             #[allow(unused_variables)]
             while let Some(&mut (from, ref mut edge)) = stack.last_mut() {
                 let $from = from as usize;
                 let $edge = *edge as usize;
-                if let Some(&(next, to, ref $data)) = g.edge.get($edge) {
+                if let Some(&(next, to, ref $data)) = $g.edge.get($edge) {
                     let $to = to as usize;
                     let prev = *edge;
                     *edge = next;
@@ -25,12 +24,12 @@ mod dfs {
                     *edge = prev;
                     let $from = $to;
                     $begin;
-                    stack.push((to, g.head[$to]));
+                    stack.push((to, $g.head[$to]));
                 } else {
                     stack.pop();
                     if let Some(&mut (from, ref mut edge)) = stack.last_mut() {
                         let $edge = *edge as usize;
-                        let (next, to, $data) = g.edge[$edge];
+                        let (next, to, $data) = $g.edge[$edge];
                         *edge = next;
                         $end;
                         let $from = from as usize;
@@ -61,7 +60,7 @@ graph.connect(3, 0, "3 -> 0");
 graph.connect(3, 2, "3 -> 2");
 let mut visited = vec![false; 4];
 dfs! {
-    (&graph, 0)
+    (graph, 0)
     |from, to, data, edge| => {
         visited[from] = true;
     } => if visited[to] {
@@ -115,20 +114,19 @@ dfs! {
 # mod dfs {
 #     macro_rules! dfs {
 #         {
-#             ($g:expr, $node:expr)
+#             ($g:ident, $node:expr)
 #             |$from:ident, $to:ident, $data:ident, $edge:ident| =>
 #             $begin:expr => $before:expr => recurse => $after:expr => $end:expr
 #         } => {
-#             let g = $g;
 #             let $from: usize = $node;
 #             $begin;
 #             let from = $from as u32;
-#             let mut stack = vec![(from, g.head[$from])];
+#             let mut stack = vec![(from, $g.head[$from])];
 #             #[allow(unused_variables)]
 #             while let Some(&mut (from, ref mut edge)) = stack.last_mut() {
 #                 let $from = from as usize;
 #                 let $edge = *edge as usize;
-#                 if let Some(&(next, to, ref $data)) = g.edge.get($edge) {
+#                 if let Some(&(next, to, ref $data)) = $g.edge.get($edge) {
 #                     let $to = to as usize;
 #                     let prev = *edge;
 #                     *edge = next;
@@ -136,12 +134,12 @@ dfs! {
 #                     *edge = prev;
 #                     let $from = $to;
 #                     $begin;
-#                     stack.push((to, g.head[$to]));
+#                     stack.push((to, $g.head[$to]));
 #                 } else {
 #                     stack.pop();
 #                     if let Some(&mut (from, ref mut edge)) = stack.last_mut() {
 #                         let $edge = *edge as usize;
-#                         let (next, to, $data) = g.edge[$edge];
+#                         let (next, to, $data) = $g.edge[$edge];
 #                         *edge = next;
 #                         $end;
 #                         let $from = from as usize;

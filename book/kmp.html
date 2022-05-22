@@ -75,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">1.</strong> Segment Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">2.</strong> Adjacency Array</a></li><li class="chapter-item expanded "><a href="dfs.html"><strong aria-hidden="true">3.</strong> Depth-First Search</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html" class="active"><strong aria-hidden="true">4.</strong> KMP</a></li><li class="chapter-item expanded affix "><li class="part-title">Miscellaneous</li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">5.</strong> Matrix</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">1.</strong> Segment Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">2.</strong> Adjacency Array</a></li><li class="chapter-item expanded "><a href="dfs.html"><strong aria-hidden="true">3.</strong> Depth-First Search</a></li><li class="chapter-item expanded "><a href="scc.html"><strong aria-hidden="true">4.</strong> Strongly Connected Components</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html" class="active"><strong aria-hidden="true">5.</strong> KMP</a></li><li class="chapter-item expanded affix "><li class="part-title">Miscellaneous</li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">6.</strong> Matrix</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -185,7 +185,7 @@ where
 <pre><pre class="playground"><code class="language-rust edition2021"><span class="boring">fn main() {
 </span>let haystack = b&quot;AABABAABABAA&quot;;
 let needle = b&quot;ABA&quot;;
-let mut kmp = Kmp::new(needle, needle, vec![0]);
+let mut kmp = Kmp::new(&amp;needle[1..], needle, vec![0]);
 while let Some(pi) = kmp.next() {
     kmp.pi.push(pi as u32);
 }
@@ -246,7 +246,7 @@ for (i, len) in Kmp::new(haystack, needle, kmp.pi).enumerate() {
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="dfs.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="scc.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                             <a rel="next" href="matrix.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
@@ -258,7 +258,7 @@ for (i, len) in Kmp::new(haystack, needle, kmp.pi).enumerate() {
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="dfs.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="scc.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
                     <a rel="next" href="matrix.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">

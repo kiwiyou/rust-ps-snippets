@@ -75,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html" class="active"><strong aria-hidden="true">1.</strong> Segment Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">2.</strong> Adjacency Array</a></li><li class="chapter-item expanded "><a href="dfs.html"><strong aria-hidden="true">3.</strong> Depth-First Search</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">4.</strong> KMP</a></li><li class="chapter-item expanded affix "><li class="part-title">Miscellaneous</li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">5.</strong> Matrix</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html" class="active"><strong aria-hidden="true">1.</strong> Segment Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">2.</strong> Adjacency Array</a></li><li class="chapter-item expanded "><a href="dfs.html"><strong aria-hidden="true">3.</strong> Depth-First Search</a></li><li class="chapter-item expanded "><a href="scc.html"><strong aria-hidden="true">4.</strong> Strongly Connected Components</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">5.</strong> KMP</a></li><li class="chapter-item expanded affix "><li class="part-title">Miscellaneous</li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">6.</strong> Matrix</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -193,7 +193,7 @@ where
             l &gt;&gt;= 1;
             r &gt;&gt;= 1;
         }
-        (self.combind)(lsum, rsum)
+        (self.combine)(lsum, rsum)
     }
 
     fn update&lt;U&gt;(&amp;mut self, mut i: usize, u: U)
@@ -205,7 +205,7 @@ where
         (self.apply)(&amp;mut self.v[i], u);
         while i &gt; 1 {
             i &gt;&gt;= 1;
-            self.v[i] = Op::combine(self.v[i &lt;&lt; 1], self.v[i &lt;&lt; 1 | 1]);
+            self.v[i] = (self.combine)(self.v[i &lt;&lt; 1], self.v[i &lt;&lt; 1 | 1]);
         }
     }
 
@@ -214,10 +214,10 @@ where
         if pred(self.v[p]) {
             self.offset
         } else {
-            let mut pivot = Op::e();
+            let mut pivot = self.e;
             while p &lt; self.offset {
                 p &lt;&lt;= 1;
-                let test = Op::combine(pivot, self.v[p]);
+                let test = (self.combine)(pivot, self.v[p]);
                 if pred(test) {
                     pivot = test;
                     p |= 1;

@@ -76,7 +76,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">1.</strong> Segment Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">2.</strong> Adjacency Array</a></li><li class="chapter-item expanded "><a href="dfs.html"><strong aria-hidden="true">3.</strong> Depth-First Search</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">4.</strong> KMP</a></li><li class="chapter-item expanded affix "><li class="part-title">Miscellaneous</li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">5.</strong> Matrix</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">1.</strong> Segment Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">2.</strong> Adjacency Array</a></li><li class="chapter-item expanded "><a href="dfs.html"><strong aria-hidden="true">3.</strong> Depth-First Search</a></li><li class="chapter-item expanded "><a href="scc.html"><strong aria-hidden="true">4.</strong> Strongly Connected Components</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">5.</strong> KMP</a></li><li class="chapter-item expanded affix "><li class="part-title">Miscellaneous</li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">6.</strong> Matrix</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -198,7 +198,7 @@ where
             l &gt;&gt;= 1;
             r &gt;&gt;= 1;
         }
-        (self.combind)(lsum, rsum)
+        (self.combine)(lsum, rsum)
     }
 
     fn update&lt;U&gt;(&amp;mut self, mut i: usize, u: U)
@@ -210,7 +210,7 @@ where
         (self.apply)(&amp;mut self.v[i], u);
         while i &gt; 1 {
             i &gt;&gt;= 1;
-            self.v[i] = Op::combine(self.v[i &lt;&lt; 1], self.v[i &lt;&lt; 1 | 1]);
+            self.v[i] = (self.combine)(self.v[i &lt;&lt; 1], self.v[i &lt;&lt; 1 | 1]);
         }
     }
 
@@ -219,10 +219,10 @@ where
         if pred(self.v[p]) {
             self.offset
         } else {
-            let mut pivot = Op::e();
+            let mut pivot = self.e;
             while p &lt; self.offset {
                 p &lt;&lt;= 1;
-                let test = Op::combine(pivot, self.v[p]);
+                let test = (self.combine)(pivot, self.v[p]);
                 if pred(test) {
                     pivot = test;
                     p |= 1;
@@ -281,20 +281,19 @@ impl&lt;'g, T&gt; Iterator for Neighbor&lt;'g, T&gt; {
 <pre><code class="language-rust noplayground">mod dfs {
     macro_rules! dfs {
         {
-            ($g:expr, $node:expr)
+            ($g:ident, $node:expr)
             |$from:ident, $to:ident, $data:ident, $edge:ident| =&gt;
             $begin:expr =&gt; $before:expr =&gt; recurse =&gt; $after:expr =&gt; $end:expr
         } =&gt; {
-            let g = $g;
             let $from: usize = $node;
             $begin;
             let from = $from as u32;
-            let mut stack = vec![(from, g.head[$from])];
+            let mut stack = vec![(from, $g.head[$from])];
             #[allow(unused_variables)]
             while let Some(&amp;mut (from, ref mut edge)) = stack.last_mut() {
                 let $from = from as usize;
                 let $edge = *edge as usize;
-                if let Some(&amp;(next, to, ref $data)) = g.edge.get($edge) {
+                if let Some(&amp;(next, to, ref $data)) = $g.edge.get($edge) {
                     let $to = to as usize;
                     let prev = *edge;
                     *edge = next;
@@ -302,12 +301,12 @@ impl&lt;'g, T&gt; Iterator for Neighbor&lt;'g, T&gt; {
                     *edge = prev;
                     let $from = $to;
                     $begin;
-                    stack.push((to, g.head[$to]));
+                    stack.push((to, $g.head[$to]));
                 } else {
                     stack.pop();
                     if let Some(&amp;mut (from, ref mut edge)) = stack.last_mut() {
                         let $edge = *edge as usize;
-                        let (next, to, $data) = g.edge[$edge];
+                        let (next, to, $data) = $g.edge[$edge];
                         *edge = next;
                         $end;
                         let $from = from as usize;
@@ -335,7 +334,7 @@ graph.connect(3, 0, &quot;3 -&gt; 0&quot;);
 graph.connect(3, 2, &quot;3 -&gt; 2&quot;);
 let mut visited = vec![false; 4];
 dfs! {
-    (&amp;graph, 0)
+    (graph, 0)
     |from, to, data, edge| =&gt; {
         visited[from] = true;
     } =&gt; if visited[to] {
@@ -389,20 +388,19 @@ dfs! {
 </span><span class="boring">mod dfs {
 </span><span class="boring">    macro_rules! dfs {
 </span><span class="boring">        {
-</span><span class="boring">            ($g:expr, $node:expr)
+</span><span class="boring">            ($g:ident, $node:expr)
 </span><span class="boring">            |$from:ident, $to:ident, $data:ident, $edge:ident| =&gt;
 </span><span class="boring">            $begin:expr =&gt; $before:expr =&gt; recurse =&gt; $after:expr =&gt; $end:expr
 </span><span class="boring">        } =&gt; {
-</span><span class="boring">            let g = $g;
 </span><span class="boring">            let $from: usize = $node;
 </span><span class="boring">            $begin;
 </span><span class="boring">            let from = $from as u32;
-</span><span class="boring">            let mut stack = vec![(from, g.head[$from])];
+</span><span class="boring">            let mut stack = vec![(from, $g.head[$from])];
 </span><span class="boring">            #[allow(unused_variables)]
 </span><span class="boring">            while let Some(&amp;mut (from, ref mut edge)) = stack.last_mut() {
 </span><span class="boring">                let $from = from as usize;
 </span><span class="boring">                let $edge = *edge as usize;
-</span><span class="boring">                if let Some(&amp;(next, to, ref $data)) = g.edge.get($edge) {
+</span><span class="boring">                if let Some(&amp;(next, to, ref $data)) = $g.edge.get($edge) {
 </span><span class="boring">                    let $to = to as usize;
 </span><span class="boring">                    let prev = *edge;
 </span><span class="boring">                    *edge = next;
@@ -410,12 +408,12 @@ dfs! {
 </span><span class="boring">                    *edge = prev;
 </span><span class="boring">                    let $from = $to;
 </span><span class="boring">                    $begin;
-</span><span class="boring">                    stack.push((to, g.head[$to]));
+</span><span class="boring">                    stack.push((to, $g.head[$to]));
 </span><span class="boring">                } else {
 </span><span class="boring">                    stack.pop();
 </span><span class="boring">                    if let Some(&amp;mut (from, ref mut edge)) = stack.last_mut() {
 </span><span class="boring">                        let $edge = *edge as usize;
-</span><span class="boring">                        let (next, to, $data) = g.edge[$edge];
+</span><span class="boring">                        let (next, to, $data) = $g.edge[$edge];
 </span><span class="boring">                        *edge = next;
 </span><span class="boring">                        $end;
 </span><span class="boring">                        let $from = from as usize;
@@ -432,6 +430,49 @@ dfs! {
 </span><span class="boring">}
 </span><span class="boring">use dfs::dfs;
 </span></code></pre></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="strongly-connected-components"><a class="header" href="#strongly-connected-components">Strongly Connected Components</a></h1>
+<p>Uses <a href="https://www.wikiwand.com/en/Path-based_strong_component_algorithm">Path-based strong component algorithm</a>.</p>
+<pre><code class="language-rust ignore">// let v = (number of vertices);
+// let graph = (input graph);
+// let begin = (beginning vertex);
+let mut id = vec![u32::MAX; v];
+let mut scc = vec![u32::MAX; v];
+let mut s = vec![];
+let mut p = vec![];
+let mut c = 0;
+let mut scc_id = 0;
+dfs! {
+    (graph, begin)
+    |from, to, data, edge| =&gt; {
+        id[from] = c;
+        s.push(from);
+        p.push(from);
+        c += 1;
+    } =&gt; if id[to] != u32::MAX {
+        if scc[to] == u32::MAX {
+            while let Some(&amp;x) = p.last() {
+                if id[x] &gt; id[to] {
+                    p.pop();
+                } else {
+                    break;
+                }
+            }
+        }
+        continue;
+    } =&gt; recurse =&gt; {} =&gt; {
+        if p.last() == Some(&amp;from) {
+            p.pop();
+            while let Some(x) = s.pop() {
+                scc[x] = scc_id;
+                if x == from {
+                    break;
+                }
+            }
+            scc_id += 1;
+        }
+    }
+}
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="kmp"><a class="header" href="#kmp">KMP</a></h1>
 <pre><code class="language-rust noplayground">
 struct Kmp&lt;'a, I, T&gt; {
@@ -483,7 +524,7 @@ where
 <pre><pre class="playground"><code class="language-rust edition2021"><span class="boring">fn main() {
 </span>let haystack = b&quot;AABABAABABAA&quot;;
 let needle = b&quot;ABA&quot;;
-let mut kmp = Kmp::new(needle, needle, vec![0]);
+let mut kmp = Kmp::new(&amp;needle[1..], needle, vec![0]);
 while let Some(pi) = kmp.next() {
     kmp.pi.push(pi as u32);
 }

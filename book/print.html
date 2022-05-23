@@ -76,7 +76,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">1.</strong> Segment Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">2.</strong> Adjacency Array</a></li><li class="chapter-item expanded "><a href="dfs.html"><strong aria-hidden="true">3.</strong> Depth-First Search</a></li><li class="chapter-item expanded "><a href="scc.html"><strong aria-hidden="true">4.</strong> Strongly Connected Components</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">5.</strong> KMP</a></li><li class="chapter-item expanded affix "><li class="part-title">Miscellaneous</li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">6.</strong> Matrix</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Utility</li><li class="chapter-item expanded "><a href="skeleton.html"><strong aria-hidden="true">1.</strong> Skeleton</a></li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">2.</strong> Matrix</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">3.</strong> Segment Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">4.</strong> Adjacency Array</a></li><li class="chapter-item expanded "><a href="dfs.html"><strong aria-hidden="true">5.</strong> Depth-First Search</a></li><li class="chapter-item expanded "><a href="scc.html"><strong aria-hidden="true">6.</strong> Strongly Connected Components</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">7.</strong> KMP</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -139,6 +139,237 @@
 <p><em>Rust has <strong>fancy</strong> ability to abstract algorithms. Why don't we use it in PS domain?</em></p>
 <p>Many algorithms and data structures are exhausting and boring to implement every time.
 You can copy ready-made implementations here and focus on the logic.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="skeleton"><a class="header" href="#skeleton">Skeleton</a></h1>
+<p>Skeleton for BOJ solution code.</p>
+<pre><code class="language-rust ignore">use std::io::{stdout, Write};
+
+fn main() {
+    let mut reader = Reader::new();
+    let mut writer = Writer::default();
+}
+
+struct Reader(&amp;'static [u8]);
+
+extern &quot;C&quot; {
+    fn mmap(addr: usize, len: usize, p: i32, f: i32, fd: i32, o: i64) -&gt; *mut u8;
+    fn fstat(fd: i32, stat: *mut usize) -&gt; i32;
+}
+
+impl Reader {
+    fn new() -&gt; Self {
+        let mut stat = [0; 20];
+        unsafe { fstat(0, stat.as_mut_ptr()) };
+        let buffer = unsafe { mmap(0, stat[6], 1, 2, 0, 0) };
+        Self(unsafe { std::slice::from_raw_parts(buffer, stat[6]) })
+    }
+
+    fn read&lt;T: Readable&gt;(&amp;mut self) -&gt; T {
+        T::read(self)
+    }
+}
+
+#[derive(Default)]
+struct Writer(Vec&lt;u8&gt;);
+
+impl Writer {
+    fn write&lt;T: Writable&gt;(&amp;mut self, value: T) {
+        value.write(self)
+    }
+}
+
+impl Drop for Writer {
+    fn drop(&amp;mut self) {
+        stdout().write_all(&amp;self.0).ok();
+    }
+}
+
+trait Readable: Sized {
+    fn read(reader: &amp;mut Reader) -&gt; Self;
+}
+
+trait Writable {
+    fn write(self, writer: &amp;mut Writer);
+}
+
+impl Readable for &amp;'_ [u8] {
+    fn read(reader: &amp;mut Reader) -&gt; Self {
+        reader.0.split(|&amp;b| b &lt;= 32).next().unwrap()
+    }
+}
+
+impl Writable for &amp;'_ [u8] {
+    fn write(self, writer: &amp;mut Writer) {
+        writer.0.extend_from_slice(self);
+    }
+}
+
+impl&lt;const N: usize&gt; Writable for &amp;'_ [u8; N] {
+    fn write(self, writer: &amp;mut Writer) {
+        writer.0.extend_from_slice(self);
+    }
+}
+
+impl Writable for std::fmt::Arguments&lt;'_&gt; {
+    fn write(self, writer: &amp;mut Writer) {
+        writer.0.write_fmt(self);
+    }
+}
+
+macro_rules! impl_urw {
+    ($($t:ty),+) =&gt; { $(
+        impl Readable for $t {
+            fn read(reader: &amp;mut Reader) -&gt; Self {
+                let mut v = 0;
+                loop {
+                    let (&amp;c, rest) = reader.0.split_first().unwrap();
+                    reader.0 = rest;
+                    if c &amp; 0x30 == 0x30 {
+                        v = v * 10 + (c &amp; 0x0f) as Self;
+                    } else {
+                        break v;
+                    }
+                }
+            }
+        }
+        impl Writable for $t {
+            fn write(self, writer: &amp;mut Writer) {
+                if self &gt;= 10 {
+                    writer.write(self / 10);
+                }
+                writer.0.push(b'0' + (self % 10) as u8);
+            }
+        }
+    )+ };
+}
+
+impl_urw!(u8, u16, u32, u64, usize);
+
+macro_rules! impl_srw {
+    ($($u:ty, $i:ty),+) =&gt; { $(
+        impl Readable for $i {
+            fn read(reader: &amp;mut Reader) -&gt; Self {
+                let (&amp;c, rest) = reader.0.split_first().unwrap();
+                if c == b'-' {
+                    reader.0 = rest;
+                    -(reader.read::&lt;$u&gt;() as Self)
+                } else {
+                    reader.read::&lt;$u&gt;() as Self
+                }
+            }
+        }
+        impl Writable for $i {
+            fn write(self, writer: &amp;mut Writer) {
+                let abs = if self &lt; 0 {
+                    writer.0.push(b'-');
+                    -self
+                } else {
+                    self
+                };
+                writer.write(abs as $u);
+            }
+        }
+    )+ };
+}
+
+impl_srw!(u8, i8, u16, i16, u32, i32, u64, i64, usize, isize);
+</code></pre>
+<h2 id="writer-example"><a class="header" href="#writer-example"><code>Writer</code> Example</a></h2>
+<pre><pre class="playground"><code class="language-rust edition2021">use std::io::{stdout, Write};
+
+fn main() {
+    let mut writer = Writer::default();
+    writer.write(1u8);
+    writer.write(-7i32);
+    writer.write(b&quot;test&quot;);
+    writer.write(format_args!(&quot;Complex {:07}&quot;, 42));
+}
+
+#[derive(Default)]
+struct Writer(Vec&lt;u8&gt;);
+
+impl Writer {
+    fn write&lt;T: Writable&gt;(&amp;mut self, value: T) {
+        value.write(self)
+    }
+}
+
+impl Drop for Writer {
+    fn drop(&amp;mut self) {
+        stdout().write_all(&amp;self.0).ok();
+    }
+}
+
+trait Writable {
+    fn write(self, writer: &amp;mut Writer);
+}
+
+impl Writable for &amp;'_ [u8] {
+    fn write(self, writer: &amp;mut Writer) {
+        writer.0.extend_from_slice(self);
+    }
+}
+
+impl&lt;const N: usize&gt; Writable for &amp;'_ [u8; N] {
+    fn write(self, writer: &amp;mut Writer) {
+        writer.0.extend_from_slice(self);
+    }
+}
+
+impl Writable for std::fmt::Arguments&lt;'_&gt; {
+    fn write(self, writer: &amp;mut Writer) {
+        writer.0.write_fmt(self);
+    }
+}
+
+macro_rules! impl_urw {
+    ($($t:ty),+) =&gt; { $(
+        impl Writable for $t {
+            fn write(self, writer: &amp;mut Writer) {
+                if self &gt;= 10 {
+                    writer.write(self / 10);
+                }
+                writer.0.push(b'0' + (self % 10) as u8);
+            }
+        }
+    )+ };
+}
+
+impl_urw!(u8, u16, u32, u64, usize);
+
+macro_rules! impl_srw {
+    ($($u:ty, $i:ty),+) =&gt; { $(
+        impl Writable for $i {
+            fn write(self, writer: &amp;mut Writer) {
+                let abs = if self &lt; 0 {
+                    writer.0.push(b'-');
+                    -self
+                } else {
+                    self
+                };
+                writer.write(abs as $u);
+            }
+        }
+    )+ };
+}
+
+impl_srw!(u8, i8, u16, i16, u32, i32, u64, i64, usize, isize);
+</code></pre></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="matrix"><a class="header" href="#matrix">Matrix</a></h1>
+<pre><code class="language-rust noplayground">struct Matrix&lt;T&gt;(Vec&lt;T&gt;, usize);
+
+impl&lt;T&gt; std::ops::Index&lt;usize&gt; for Matrix&lt;T&gt; {
+    type Output = [T];
+    fn index(&amp;self, index: usize) -&gt; &amp;Self::Output {
+        &amp;self.0[index * self.1..][..self.1]
+    }
+}
+
+impl&lt;T&gt; std::ops::IndexMut&lt;usize&gt; for Matrix&lt;T&gt; {
+    fn index_mut(&amp;mut self, index: usize) -&gt; &amp;mut Self::Output {
+        &amp;mut self.0[index * self.1..][..self.1]
+    }
+}
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="segment-tree"><a class="header" href="#segment-tree">Segment Tree</a></h1>
 <pre><code class="language-rust noplayground">struct SegTree&lt;C, A, T&gt; {
     e: T,
@@ -580,22 +811,6 @@ for (i, len) in Kmp::new(haystack, needle, kmp.pi).enumerate() {
 </span><span class="boring">    }
 </span><span class="boring">}
 </span></code></pre></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="matrix"><a class="header" href="#matrix">Matrix</a></h1>
-<pre><code class="language-rust noplayground">struct Matrix&lt;T&gt;(Vec&lt;T&gt;, usize);
-
-impl&lt;T&gt; std::ops::Index&lt;usize&gt; for Matrix&lt;T&gt; {
-    type Output = [T];
-    fn index(&amp;self, index: usize) -&gt; &amp;Self::Output {
-        &amp;self.0[index * self.1..][..self.1]
-    }
-}
-
-impl&lt;T&gt; std::ops::IndexMut&lt;usize&gt; for Matrix&lt;T&gt; {
-    fn index_mut(&amp;mut self, index: usize) -&gt; &amp;mut Self::Output {
-        &amp;mut self.0[index * self.1..][..self.1]
-    }
-}
-</code></pre>
 
                     </main>
 

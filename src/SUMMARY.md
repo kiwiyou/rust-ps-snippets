@@ -2,6 +2,11 @@
 
 [Introduction](README.md)
 
+# Utility
+
+- [Skeleton](skeleton.md)
+- [Matrix](matrix.md)
+
 # Data Structures
 
 - [Segment Tree](segment-tree.md)
@@ -15,8 +20,4 @@
 # Strings
 
 - [KMP](kmp.md)
-
-# Miscellaneous
-
-- [Matrix](matrix.md)
 

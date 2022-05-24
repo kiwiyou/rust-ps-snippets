@@ -166,6 +166,10 @@ impl Reader {
     fn read&lt;T: Readable&gt;(&amp;mut self) -&gt; T {
         T::read(self)
     }
+
+    fn iter&lt;T: Readable&gt;(&amp;mut self) -&gt; impl Iterator&lt;Item = T&gt; + '_ {
+        std::iter::repeat_with(|| self.read())
+    }
 }
 
 #[derive(Default)]
@@ -211,7 +215,7 @@ impl&lt;const N: usize&gt; Writable for &amp;'_ [u8; N] {
 
 impl Writable for std::fmt::Arguments&lt;'_&gt; {
     fn write(self, writer: &amp;mut Writer) {
-        writer.0.write_fmt(self);
+        writer.0.write_fmt(self).ok();
     }
 }
 

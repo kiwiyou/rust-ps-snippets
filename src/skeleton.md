@@ -28,6 +28,10 @@ impl Reader {
     fn read<T: Readable>(&mut self) -> T {
         T::read(self)
     }
+
+    fn iter<T: Readable>(&mut self) -> impl Iterator<Item = T> + '_ {
+        std::iter::repeat_with(|| self.read())
+    }
 }
 
 #[derive(Default)]
@@ -73,7 +77,7 @@ impl<const N: usize> Writable for &'_ [u8; N] {
 
 impl Writable for std::fmt::Arguments<'_> {
     fn write(self, writer: &mut Writer) {
-        writer.0.write_fmt(self);
+        writer.0.write_fmt(self).ok();
     }
 }
 

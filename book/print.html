@@ -141,7 +141,7 @@
 You can copy ready-made implementations here and focus on the logic.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="skeleton"><a class="header" href="#skeleton">Skeleton</a></h1>
 <p>Skeleton for BOJ solution code.</p>
-<pre><code class="language-rust ignore">use std::io::{stdout, Write};
+<pre><code class="language-rust ignore">use std::{arch::asm, io::{stdout, Write}};
 
 fn main() {
     let mut reader = Reader::new();
@@ -150,17 +150,15 @@ fn main() {
 
 struct Reader(&amp;'static [u8]);
 
-extern &quot;C&quot; {
-    fn mmap(addr: usize, len: usize, p: i32, f: i32, fd: i32, o: i64) -&gt; *mut u8;
-    fn fstat(fd: i32, stat: *mut usize) -&gt; i32;
-}
-
 impl Reader {
     fn new() -&gt; Self {
-        let mut stat = [0; 20];
-        unsafe { fstat(0, stat.as_mut_ptr()) };
-        let buffer = unsafe { mmap(0, stat[6], 1, 2, 0, 0) };
-        Self(unsafe { std::slice::from_raw_parts(buffer, stat[6]) })
+        let mut stat = [0usize; 20];
+        let buf = *const u8;
+        unsafe {
+            asm!(&quot;syscall&quot;, in(&quot;rax&quot;) 5, in(&quot;rdi&quot;) 0, in(&quot;rsi&quot;) stat.as_ptr());
+            asm!(&quot;syscall&quot;, in(&quot;rax&quot;) 9, in(&quot;rdi&quot;) 0, in(&quot;rsi&quot;) stat[6], in(&quot;rdx&quot;) 1, in(&quot;r10&quot;) 2, in(&quot;r8&quot;) 0, in(&quot;r9&quot;) 0, lateout(&quot;rax&quot;) buf);
+        }
+        Self(unsafe { std::slice::from_raw_parts(buf, stat[6]) })
     }
 
     fn read&lt;T: Readable&gt;(&amp;mut self) -&gt; T {
@@ -183,7 +181,9 @@ impl Writer {
 
 impl Drop for Writer {
     fn drop(&amp;mut self) {
-        stdout().write_all(&amp;self.0).ok();
+        unsafe {
+            asm!(&quot;syscall&quot;, in(&quot;rax&quot;) 1, in(&quot;rdi&quot;) 1, in(&quot;rsi&quot;) self.0.as_ptr(), in(&quot;rdx&quot;) self.0.len());
+        }
     }
 }
 
@@ -278,86 +278,12 @@ macro_rules! impl_srw {
 impl_srw!(u8, i8, u16, i16, u32, i32, u64, i64, usize, isize);
 </code></pre>
 <h2 id="writer-example"><a class="header" href="#writer-example"><code>Writer</code> Example</a></h2>
-<pre><pre class="playground"><code class="language-rust edition2021">use std::io::{stdout, Write};
-
-fn main() {
-    let mut writer = Writer::default();
-    writer.write(1u8);
-    writer.write(-7i32);
-    writer.write(b&quot;test&quot;);
-    writer.write(format_args!(&quot;Complex {:07}&quot;, 42));
-}
-
-#[derive(Default)]
-struct Writer(Vec&lt;u8&gt;);
-
-impl Writer {
-    fn write&lt;T: Writable&gt;(&amp;mut self, value: T) {
-        value.write(self)
-    }
-}
-
-impl Drop for Writer {
-    fn drop(&amp;mut self) {
-        stdout().write_all(&amp;self.0).ok();
-    }
-}
-
-trait Writable {
-    fn write(self, writer: &amp;mut Writer);
-}
-
-impl Writable for &amp;'_ [u8] {
-    fn write(self, writer: &amp;mut Writer) {
-        writer.0.extend_from_slice(self);
-    }
-}
-
-impl&lt;const N: usize&gt; Writable for &amp;'_ [u8; N] {
-    fn write(self, writer: &amp;mut Writer) {
-        writer.0.extend_from_slice(self);
-    }
-}
-
-impl Writable for std::fmt::Arguments&lt;'_&gt; {
-    fn write(self, writer: &amp;mut Writer) {
-        writer.0.write_fmt(self);
-    }
-}
-
-macro_rules! impl_urw {
-    ($($t:ty),+) =&gt; { $(
-        impl Writable for $t {
-            fn write(self, writer: &amp;mut Writer) {
-                if self &gt;= 10 {
-                    writer.write(self / 10);
-                }
-                writer.0.push(b'0' + (self % 10) as u8);
-            }
-        }
-    )+ };
-}
-
-impl_urw!(u8, u16, u32, u64, usize);
-
-macro_rules! impl_srw {
-    ($($u:ty, $i:ty),+) =&gt; { $(
-        impl Writable for $i {
-            fn write(self, writer: &amp;mut Writer) {
-                let abs = if self &lt; 0 {
-                    writer.0.push(b'-');
-                    -self
-                } else {
-                    self
-                };
-                writer.write(abs as $u);
-            }
-        }
-    )+ };
-}
-
-impl_srw!(u8, i8, u16, i16, u32, i32, u64, i64, usize, isize);
-</code></pre></pre>
+<pre><code class="language-rust ignore">let mut writer = Writer::default();
+writer.write(1u8);
+writer.write(-7i32);
+writer.write(b&quot;test&quot;);
+writer.write(format_args!(&quot;Complex {:07}&quot;, 42));
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="matrix"><a class="header" href="#matrix">Matrix</a></h1>
 <pre><code class="language-rust noplayground">struct Matrix&lt;T&gt;(Vec&lt;T&gt;, usize);
 

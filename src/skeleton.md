@@ -4,7 +4,7 @@ Skeleton for BOJ solution code.
 
 ```rust,ignore
 #![no_main]
-use std::{arch::asm, io::{stdout, Write}};
+use std::{arch::asm, io::Write};
 
 #[no_mangle]
 fn main() {

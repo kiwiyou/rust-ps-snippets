@@ -3,7 +3,7 @@
 Skeleton for BOJ solution code.
 
 ```rust,ignore
-use std::io::{stdout, Write};
+use std::{arch::asm, io::{stdout, Write}};
 
 fn main() {
     let mut reader = Reader::new();
@@ -12,17 +12,15 @@ fn main() {
 
 struct Reader(&'static [u8]);
 
-extern "C" {
-    fn mmap(addr: usize, len: usize, p: i32, f: i32, fd: i32, o: i64) -> *mut u8;
-    fn fstat(fd: i32, stat: *mut usize) -> i32;
-}
-
 impl Reader {
     fn new() -> Self {
-        let mut stat = [0; 20];
-        unsafe { fstat(0, stat.as_mut_ptr()) };
-        let buffer = unsafe { mmap(0, stat[6], 1, 2, 0, 0) };
-        Self(unsafe { std::slice::from_raw_parts(buffer, stat[6]) })
+        let mut stat = [0usize; 20];
+        let buf = *const u8;
+        unsafe {
+            asm!("syscall", in("rax") 5, in("rdi") 0, in("rsi") stat.as_ptr());
+            asm!("syscall", in("rax") 9, in("rdi") 0, in("rsi") stat[6], in("rdx") 1, in("r10") 2, in("r8") 0, in("r9") 0, lateout("rax") buf);
+        }
+        Self(unsafe { std::slice::from_raw_parts(buf, stat[6]) })
     }
 
     fn read<T: Readable>(&mut self) -> T {
@@ -45,7 +43,9 @@ impl Writer {
 
 impl Drop for Writer {
     fn drop(&mut self) {
-        stdout().write_all(&self.0).ok();
+        unsafe {
+            asm!("syscall", in("rax") 1, in("rdi") 1, in("rsi") self.0.as_ptr(), in("rdx") self.0.len());
+        }
     }
 }
 
@@ -142,84 +142,10 @@ impl_srw!(u8, i8, u16, i16, u32, i32, u64, i64, usize, isize);
 
 ## `Writer` Example
 
-```rust
-use std::io::{stdout, Write};
-
-fn main() {
-    let mut writer = Writer::default();
-    writer.write(1u8);
-    writer.write(-7i32);
-    writer.write(b"test");
-    writer.write(format_args!("Complex {:07}", 42));
-}
-
-#[derive(Default)]
-struct Writer(Vec<u8>);
-
-impl Writer {
-    fn write<T: Writable>(&mut self, value: T) {
-        value.write(self)
-    }
-}
-
-impl Drop for Writer {
-    fn drop(&mut self) {
-        stdout().write_all(&self.0).ok();
-    }
-}
-
-trait Writable {
-    fn write(self, writer: &mut Writer);
-}
-
-impl Writable for &'_ [u8] {
-    fn write(self, writer: &mut Writer) {
-        writer.0.extend_from_slice(self);
-    }
-}
-
-impl<const N: usize> Writable for &'_ [u8; N] {
-    fn write(self, writer: &mut Writer) {
-        writer.0.extend_from_slice(self);
-    }
-}
-
-impl Writable for std::fmt::Arguments<'_> {
-    fn write(self, writer: &mut Writer) {
-        writer.0.write_fmt(self);
-    }
-}
-
-macro_rules! impl_urw {
-    ($($t:ty),+) => { $(
-        impl Writable for $t {
-            fn write(self, writer: &mut Writer) {
-                if self >= 10 {
-                    writer.write(self / 10);
-                }
-                writer.0.push(b'0' + (self % 10) as u8);
-            }
-        }
-    )+ };
-}
-
-impl_urw!(u8, u16, u32, u64, usize);
-
-macro_rules! impl_srw {
-    ($($u:ty, $i:ty),+) => { $(
-        impl Writable for $i {
-            fn write(self, writer: &mut Writer) {
-                let abs = if self < 0 {
-                    writer.0.push(b'-');
-                    -self
-                } else {
-                    self
-                };
-                writer.write(abs as $u);
-            }
-        }
-    )+ };
-}
-
-impl_srw!(u8, i8, u16, i16, u32, i32, u64, i64, usize, isize);
+```rust,ignore
+let mut writer = Writer::default();
+writer.write(1u8);
+writer.write(-7i32);
+writer.write(b"test");
+writer.write(format_args!("Complex {:07}", 42));
 ```

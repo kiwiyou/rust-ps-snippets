@@ -145,9 +145,10 @@ You can copy ready-made implementations here and focus on the logic.</p>
 use std::arch::asm;
 
 #[no_mangle]
-fn main() {
+fn main() -&gt; isize {
     let mut reader = Reader::new();
     let mut writer = Writer::default();
+    0
 }
 
 struct Reader(*const u8);
@@ -283,7 +284,7 @@ macro_rules! impl_read {
         }
     )+};
 }
-impl_read!(i8 u8: 3, i16 u16: 6, i32 u32: 10, i64 u64: 18);
+impl_read!(i8 u8: 3, i16 u16: 6, i32 u32: 10, i64 u64: 20, isize usize: 20);
 
 macro_rules! impl_write {
     ($($s:ident $u:ident),+) =&gt; {$(
@@ -308,7 +309,7 @@ macro_rules! impl_write {
     )+};
 }
 
-impl_write!(i8 u8, i16 u16, i32 u32);
+impl_write!(i8 u8, i16 u16, i32 u32, isize usize);
 </code></pre>
 <h2 id="writer-example"><a class="header" href="#writer-example"><code>Writer</code> Example</a></h2>
 <pre><code class="language-rust ignore">let mut writer = Writer::default();

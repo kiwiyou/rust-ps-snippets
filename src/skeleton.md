@@ -7,9 +7,10 @@ Skeleton for BOJ solution code.
 use std::arch::asm;
 
 #[no_mangle]
-fn main() {
+fn main() -> isize {
     let mut reader = Reader::new();
     let mut writer = Writer::default();
+    0
 }
 
 struct Reader(*const u8);
@@ -145,7 +146,7 @@ macro_rules! impl_read {
         }
     )+};
 }
-impl_read!(i8 u8: 3, i16 u16: 6, i32 u32: 10, i64 u64: 18);
+impl_read!(i8 u8: 3, i16 u16: 6, i32 u32: 10, i64 u64: 20, isize usize: 20);
 
 macro_rules! impl_write {
     ($($s:ident $u:ident),+) => {$(
@@ -170,7 +171,7 @@ macro_rules! impl_write {
     )+};
 }
 
-impl_write!(i8 u8, i16 u16, i32 u32);
+impl_write!(i8 u8, i16 u16, i32 u32, isize usize);
 ```
 
 ## `Writer` Example

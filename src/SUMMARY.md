@@ -6,6 +6,7 @@
 
 - [Skeleton](skeleton.md)
 - [Matrix](matrix.md)
+- [Regex](regex.md)
 
 # Data Structures
 
@@ -14,8 +15,6 @@
 # Graphs
 
 - [Adjacency Array](adjacency-array.md)
-- [Depth-First Search](dfs.md)
-- [Strongly Connected Components](scc.md)
 
 # Strings
 

@@ -145,29 +145,99 @@
 <p>Skeleton for BOJ solution code.</p>
 <pre><pre class="playground"><code class="language-rust edition2021">#![no_main]
 
-fn solve(input: &amp;str) {
+fn main() {
+    read!(&quot;%d&quot;, n: i32);
+    for _ in 0..n {
+        read!(&quot;%d%d&quot;, a: i32, b: i32);
+        println!(&quot;{}&quot;, a + b);
+    }
 }
 
-#[no_mangle]
-unsafe fn main() -&gt; i32 {
-    let mut stat = [0; 20];
-    fstat(0, stat.as_mut_ptr());
-    let input = mmap(std::ptr::null(), stat[6], 1, 2, 0, 0);
-    solve(std::str::from_utf8_unchecked(std::slice::from_raw_parts(
-        input, stat[6],
-    )));
+#[export_name = &quot;main&quot;]
+unsafe fn entry() -&gt; i32 {
+    STDOUT = Some(std::io::BufWriter::with_capacity(
+        1 &lt;&lt; 17,
+        std::os::unix::io::FromRawFd::from_raw_fd(0),
+    ));
+    main();
+    std::io::Write::flush(STDOUT.as_mut().unwrap()).ok();
     0
 }
 
-fn print(s: &amp;str) {
-    unsafe { write(1, s.as_ptr(), s.len()) };
-}
+static mut STDOUT: Option&lt;std::io::BufWriter&lt;std::fs::File&gt;&gt; = None;
 
 #[link(name = &quot;c&quot;)]
 extern &quot;C&quot; {
-    fn fstat(fd: i32, stat: *mut usize);
-    fn mmap(addr: *const u8, len: usize, prot: i32, flags: i32, fd: i32, off: isize) -&gt; *const u8;
-    fn write(fd: i32, s: *const u8, len: usize);
+    fn scanf(fmt: *const u8, ...) -&gt; i32;
+}
+
+#[macro_export]
+macro_rules! println {
+    ($($tt:tt)*) =&gt; {
+        use std::io::Write;
+        unsafe { writeln!($crate::STDOUT.as_mut().unwrap(), $($tt)*).unwrap() }
+    }
+}
+
+#[macro_export]
+macro_rules! print {
+    ($($tt:tt)*) =&gt; {
+        use std::io::Write;
+        unsafe { write!($crate::STDOUT.as_mut().unwrap(), $($tt)*).unwrap() }
+    }
+}
+
+#[macro_export]
+macro_rules! read {
+    ($fmt:literal, $($tt:tt)*) =&gt; {
+        let fmt = concat!($fmt, &quot;\0&quot;);
+        read!(@bind $($tt)*);
+        read!(fmt.as_ptr(); @call $($tt)*);
+        read!(@rebind $($tt)*)
+    };
+    (@bind) =&gt; {};
+    (@bind $(mut)? $name:ident: str[$len:expr] $(, $($rest:tt)+)?) =&gt; {
+        let mut $name = vec![0u8; $len + 1];
+        read!(@bind $($($rest)+)?)
+    };
+    (@bind $(mut)? $name:ident: $type:ty $(, $($rest:tt)+)?) =&gt; {
+        let mut $name: $type = Default::default();
+        read!(@bind $($($rest)+)?)
+    };
+    ($($expr:expr;)+ @call) =&gt; {
+        unsafe { scanf($($expr,)*) };
+    };
+    ($($expr:expr;)+ @call $(mut)? $name:ident: str[$len:expr] $(, $($rest:tt)+)?) =&gt; {
+        read!($($expr;)+ $name.as_mut_ptr(); @call $($($rest)+)?)
+    };
+    ($($expr:expr;)+ @call $(mut)? $name:ident: $type:ty $(, $($rest:tt)+)?) =&gt; {
+        read!($($expr;)+ &amp;mut $name; @call $($($rest)+)?)
+    };
+    (@rebind) =&gt; {};
+    (@rebind mut $name:ident: str[$len:expr] $(, $($rest:tt)+)?) =&gt; {
+        let mut $name = unsafe {
+            let len = $name.partition_point(|&amp;b| b != 0);
+            $name.resize(len, 0u8);
+            String::from_utf8_unchecked($name)
+        };
+        read!(@rebind $($($rest)+)?)
+    };
+    (@rebind $name:ident: str[$len:expr] $(, $($rest:tt)+)?) =&gt; {
+        let $name = unsafe {
+            let len = $name.partition_point(|&amp;b| b != 0);
+            $name.resize(len, 0u8);
+            String::from_utf8_unchecked($name)
+        };
+        read!(@rebind $($($rest)+)?)
+    };
+    (@rebind mut $name:ident: $type:ty $(, $($rest:tt)+)?) =&gt; {
+        let mut $name: $type = $name;
+        read!(@rebind $($($rest)+)?)
+    };
+    (@rebind $name:ident: $type:ty $(, $($rest:tt)+)?) =&gt; {
+        let $name: $type = $name;
+        read!(@rebind $($($rest)+)?)
+    };
 }</code></pre></pre>
 
                     </main>

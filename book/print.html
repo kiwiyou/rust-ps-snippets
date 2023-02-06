@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Utility</li><li class="chapter-item expanded "><a href="skeleton.html"><strong aria-hidden="true">1.</strong> Skeleton</a></li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">2.</strong> Matrix</a></li><li class="chapter-item expanded "><a href="regex.html"><strong aria-hidden="true">3.</strong> Regex</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">4.</strong> Segment Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">5.</strong> Adjacency Array</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">6.</strong> KMP</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Utility</li><li class="chapter-item expanded "><a href="skeleton.html"><strong aria-hidden="true">1.</strong> Skeleton</a></li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">2.</strong> Matrix</a></li><li class="chapter-item expanded affix "><li class="part-title">Math</li><li class="chapter-item expanded "><a href="gcd.html"><strong aria-hidden="true">3.</strong> GCD</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">4.</strong> Segment Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">5.</strong> Adjacency Array</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">6.</strong> KMP</a></li><li class="chapter-item expanded "><a href="regex.html"><strong aria-hidden="true">7.</strong> Regex</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -259,38 +259,36 @@ impl&lt;T&gt; std::ops::IndexMut&lt;usize&gt; for Matrix&lt;T&gt; {
         &amp;mut self.0[index * self.1..][..self.1]
     }
 }</code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="regex"><a class="header" href="#regex">Regex</a></h1>
-<p>Use POSIX library function.</p>
-<pre><code class="language-rust noplayground">struct Regexp([u64; 8]);
-extern &quot;C&quot; {
-    fn regcomp(preg: *mut u64, pattern: *const u8, flags: i32);
-    fn regexec(preg: *const u64, s: *const u8, n_expr: usize, m: *mut i32, flags: i32) -&gt; i32;
+<div style="break-before: page; page-break-before: always;"></div><h1 id="gcd"><a class="header" href="#gcd">GCD</a></h1>
+<pre><code class="language-rust noplayground">fn gcd(mut a: u64, mut b: u64) -&gt; u64 {
+    if a == 0 {
+        b
+    } else if b == 0 {
+        a
+    } else {
+        let az = a.trailing_zeros();
+        let bz = b.trailing_zeros();
+        let s = az.min(bz);
+        a &gt;&gt;= az;
+        b &gt;&gt;= bz;
+        while a != 0 {
+            (a, b) = (a.abs_diff(b), a.min(b));
+            a &gt;&gt;= a.trailing_zeros();
+        }
+        b &lt;&lt; s
+    }
 }
 
-impl Regexp {
-    fn new(pattern: &amp;str, case_insensitive: bool) -&gt; Self {
-        let flag = if case_insensitive { 3 } else { 1 };
-        let mut tmp = pattern.as_bytes().to_vec();
-        tmp.push(0);
-        let mut v = [0; 8];
-        unsafe { regcomp(v.as_mut_ptr(), tmp.as_ptr(), flag) };
-        Self(v)
+/// Returns 3-tuple `(g, x, y)` that satisfies ax + by = g = gcd(a, b).
+fn egcd(mut a: i64, mut b: i64) -&gt; (i64, i64, i64) {
+    let (mut x, mut y, mut x1, mut y1) = (1, 0, 0, 1);
+    while b != 0 {
+        let q = a / b;
+        (x, x1) = (x1, x - q * x1);
+        (y, y1) = (y1, y - q * y1);
+        (a, b) = (b, a - q * b);
     }
-
-    fn find(&amp;self, text: &amp;str) -&gt; Option&lt;(usize, usize)&gt; {
-        // ALL THESE UNSAFE's ARE UB. Only for intended use.
-        let end = unsafe { text.as_ptr().cast_mut().add(text.len()) };
-        let save = unsafe { end.read_volatile() };
-        unsafe { end.write_volatile(0) };
-        let mut m = [0; 2];
-        let result = unsafe { regexec(self.0.as_ptr(), text.as_ptr(), 1, m.as_mut_ptr(), 0) };
-        unsafe { end.write_volatile(save) };
-        if result == 0 {
-            Some((m[0] as usize, m[1] as usize))
-        } else {
-            None
-        }
-    }
+    (a, x, y)
 }</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="segment-tree"><a class="header" href="#segment-tree">Segment Tree</a></h1>
 <pre><code class="language-rust noplayground">struct SegTree&lt;C, A, T&gt; {
@@ -533,6 +531,39 @@ for (i, len) in Kmp::new(haystack, needle, kmp.pi).enumerate() {
 </span><span class="boring">        Some(self.i)
 </span><span class="boring">    }
 </span><span class="boring">}</span></code></pre></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="regex"><a class="header" href="#regex">Regex</a></h1>
+<p>Use POSIX library function.</p>
+<pre><code class="language-rust noplayground">struct Regexp([u64; 8]);
+extern &quot;C&quot; {
+    fn regcomp(preg: *mut u64, pattern: *const u8, flags: i32);
+    fn regexec(preg: *const u64, s: *const u8, n_expr: usize, m: *mut i32, flags: i32) -&gt; i32;
+}
+
+impl Regexp {
+    fn new(pattern: &amp;str, case_insensitive: bool) -&gt; Self {
+        let flag = if case_insensitive { 3 } else { 1 };
+        let mut tmp = pattern.as_bytes().to_vec();
+        tmp.push(0);
+        let mut v = [0; 8];
+        unsafe { regcomp(v.as_mut_ptr(), tmp.as_ptr(), flag) };
+        Self(v)
+    }
+
+    fn find(&amp;self, text: &amp;str) -&gt; Option&lt;(usize, usize)&gt; {
+        // ALL THESE UNSAFE's ARE UB. Only for intended use.
+        let end = unsafe { text.as_ptr().cast_mut().add(text.len()) };
+        let save = unsafe { end.read_volatile() };
+        unsafe { end.write_volatile(0) };
+        let mut m = [0; 2];
+        let result = unsafe { regexec(self.0.as_ptr(), text.as_ptr(), 1, m.as_mut_ptr(), 0) };
+        unsafe { end.write_volatile(save) };
+        if result == 0 {
+            Some((m[0] as usize, m[1] as usize))
+        } else {
+            None
+        }
+    }
+}</code></pre>
 
                     </main>
 

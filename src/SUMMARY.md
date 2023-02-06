@@ -6,7 +6,10 @@
 
 - [Skeleton](skeleton.md)
 - [Matrix](matrix.md)
-- [Regex](regex.md)
+
+# Math
+
+- [GCD](gcd.md)
 
 # Data Structures
 
@@ -19,4 +22,5 @@
 # Strings
 
 - [KMP](kmp.md)
+- [Regex](regex.md)
 

@@ -10,6 +10,7 @@
 # Math
 
 - [GCD](gcd.md)
+- [Linear Recurrence (Constant Coefficient)](rec.md)
 
 # Data Structures
 

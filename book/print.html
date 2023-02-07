@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Utility</li><li class="chapter-item expanded "><a href="skeleton.html"><strong aria-hidden="true">1.</strong> Skeleton</a></li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">2.</strong> Matrix</a></li><li class="chapter-item expanded affix "><li class="part-title">Math</li><li class="chapter-item expanded "><a href="gcd.html"><strong aria-hidden="true">3.</strong> GCD</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">4.</strong> Segment Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">5.</strong> Adjacency Array</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">6.</strong> KMP</a></li><li class="chapter-item expanded "><a href="regex.html"><strong aria-hidden="true">7.</strong> Regex</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Utility</li><li class="chapter-item expanded "><a href="skeleton.html"><strong aria-hidden="true">1.</strong> Skeleton</a></li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">2.</strong> Matrix</a></li><li class="chapter-item expanded affix "><li class="part-title">Math</li><li class="chapter-item expanded "><a href="gcd.html"><strong aria-hidden="true">3.</strong> GCD</a></li><li class="chapter-item expanded "><a href="rec.html"><strong aria-hidden="true">4.</strong> Linear Recurrence (Constant Coefficient)</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">5.</strong> Segment Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">6.</strong> Adjacency Array</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">7.</strong> KMP</a></li><li class="chapter-item expanded "><a href="regex.html"><strong aria-hidden="true">8.</strong> Regex</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -289,6 +289,61 @@ fn egcd(mut a: i64, mut b: i64) -&gt; (i64, i64, i64) {
         (a, b) = (b, a - q * b);
     }
     (a, x, y)
+}</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="linear-recurrence-constant-coefficient"><a class="header" href="#linear-recurrence-constant-coefficient">Linear Recurrence (Constant Coefficient)</a></h1>
+<p>Calculates nth element of linearly recurrent sequence {an}, given initial values and coefficients.</p>
+<p>Time complexity: O(k³logn), where k is the length of coefficients.</p>
+<pre><code class="language-rust noplayground">const M: u64 = 998244353;
+const M32: u32 = M as u32;
+fn recurrence(init: impl AsRef&lt;[u32]&gt;, coef: impl AsRef&lt;[u32]&gt;, n: usize) -&gt; u32 {
+    let init = init.as_ref();
+    let coef = coef.as_ref();
+    let k = init.len();
+    assert_eq!(k, coef.len());
+    if n &lt; k {
+        return init[n];
+    }
+    let mut acc = vec![0; k * k];
+    for i in 0..k {
+        acc[i * k + i] = 1;
+    }
+    let mut mult = vec![0; k * (k - 1)];
+    for i in 1..k {
+        mult[(i - 1) * k + i] = 1;
+    }
+    mult.extend_from_slice(coef);
+    let mut aux = vec![0; k * k];
+    let t = (n - k + 1..=n).min_by_key(|t| t.count_ones()).unwrap();
+    for s in 0..64 - t.leading_zeros() {
+        if t &amp; (1 &lt;&lt; s) != 0 {
+            multiply(k, &amp;acc, &amp;mult, &amp;mut aux);
+            (acc, aux) = (aux, acc);
+        }
+        multiply(k, &amp;mult, &amp;mult, &amp;mut aux);
+        (mult, aux) = (aux, mult);
+    }
+    let mut result = 0;
+    for (&amp;y, &amp;x) in init.iter().zip(&amp;acc[(n - t) * k..]) {
+        result += (y as u64 * x as u64 % M) as u32;
+        if result &gt;= M32 {
+            result -= M32;
+        }
+    }
+    result
+}
+
+fn multiply(n: usize, a: &amp;[u32], b: &amp;[u32], c: &amp;mut [u32]) {
+    for i in 0..n {
+        for j in 0..n {
+            c[i * n + j] = 0;
+            for k in 0..n {
+                c[i * n + j] += (a[i * n + k] as u64 * b[k * n + j] as u64 % M) as u32;
+                if c[i * n + j] &gt;= M32 {
+                    c[i * n + j] -= M32;
+                }
+            }
+        }
+    }
 }</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="segment-tree"><a class="header" href="#segment-tree">Segment Tree</a></h1>
 <pre><code class="language-rust noplayground">struct SegTree&lt;C, A, T&gt; {

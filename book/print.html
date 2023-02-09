@@ -260,22 +260,11 @@ impl&lt;T&gt; std::ops::IndexMut&lt;usize&gt; for Matrix&lt;T&gt; {
     }
 }</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="gcd"><a class="header" href="#gcd">GCD</a></h1>
-<pre><code class="language-rust noplayground">fn gcd(mut a: u64, mut b: u64) -&gt; u64 {
-    if a == 0 {
-        b
-    } else if b == 0 {
-        a
+<pre><code class="language-rust noplayground">fn gcd(a: u64, b: u64) -&gt; u64 {
+    if a == 0 || b == 0 {
+        a + b
     } else {
-        let az = a.trailing_zeros();
-        let bz = b.trailing_zeros();
-        let s = az.min(bz);
-        a &gt;&gt;= az;
-        b &gt;&gt;= bz;
-        while a != 0 {
-            (a, b) = (a.abs_diff(b), a.min(b));
-            a &gt;&gt;= a.trailing_zeros();
-        }
-        b &lt;&lt; s
+        gcd(b, a % b)
     }
 }
 

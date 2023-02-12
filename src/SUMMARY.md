@@ -6,6 +6,7 @@
 
 - [Skeleton](skeleton.md)
 - [Matrix](matrix.md)
+- [2-SAT](twosat.md)
 
 # Math
 

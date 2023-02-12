@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Utility</li><li class="chapter-item expanded "><a href="skeleton.html"><strong aria-hidden="true">1.</strong> Skeleton</a></li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">2.</strong> Matrix</a></li><li class="chapter-item expanded affix "><li class="part-title">Math</li><li class="chapter-item expanded "><a href="gcd.html"><strong aria-hidden="true">3.</strong> GCD</a></li><li class="chapter-item expanded "><a href="rec.html"><strong aria-hidden="true">4.</strong> Linear Recurrence (Constant Coefficient)</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">5.</strong> Segment Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">6.</strong> Adjacency Array</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">7.</strong> KMP</a></li><li class="chapter-item expanded "><a href="regex.html"><strong aria-hidden="true">8.</strong> Regex</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Utility</li><li class="chapter-item expanded "><a href="skeleton.html"><strong aria-hidden="true">1.</strong> Skeleton</a></li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">2.</strong> Matrix</a></li><li class="chapter-item expanded "><a href="twosat.html"><strong aria-hidden="true">3.</strong> 2-SAT</a></li><li class="chapter-item expanded affix "><li class="part-title">Math</li><li class="chapter-item expanded "><a href="gcd.html"><strong aria-hidden="true">4.</strong> GCD</a></li><li class="chapter-item expanded "><a href="rec.html"><strong aria-hidden="true">5.</strong> Linear Recurrence (Constant Coefficient)</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">6.</strong> Segment Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">7.</strong> Adjacency Array</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">8.</strong> KMP</a></li><li class="chapter-item expanded "><a href="regex.html"><strong aria-hidden="true">9.</strong> Regex</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -257,6 +257,117 @@ impl&lt;T&gt; std::ops::Index&lt;usize&gt; for Matrix&lt;T&gt; {
 impl&lt;T&gt; std::ops::IndexMut&lt;usize&gt; for Matrix&lt;T&gt; {
     fn index_mut(&amp;mut self, index: usize) -&gt; &amp;mut Self::Output {
         &amp;mut self.0[index * self.1..][..self.1]
+    }
+}</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="2-sat"><a class="header" href="#2-sat">2-SAT</a></h1>
+<pre><code class="language-rust noplayground">#[derive(Clone, Copy)]
+enum Clause {
+    Pos(usize),
+    Neg(usize),
+}
+ 
+impl Clause {
+    fn as_index(&amp;self) -&gt; usize {
+        match self {
+            Self::Pos(i) =&gt; i &lt;&lt; 1 | 1,
+            Self::Neg(i) =&gt; i &lt;&lt; 1,
+        }
+    }
+ 
+    fn inv(&amp;self) -&gt; Self {
+        match *self {
+            Self::Pos(i) =&gt; Self::Neg(i),
+            Self::Neg(i) =&gt; Self::Pos(i),
+        }
+    }
+}
+ 
+#[derive(Default)]
+struct SAT {
+    head: Vec&lt;u32&gt;,
+    link: Vec&lt;u32&gt;,
+    end: Vec&lt;u32&gt;,
+}
+ 
+impl SAT {
+    fn reserve_clause(&amp;mut self, n: usize) {
+        self.head.resize(self.head.len() + n * 2, u32::MAX);
+    }
+ 
+    fn or(&amp;mut self, l: Clause, r: Clause) {
+        self.connect(l.inv().as_index(), r.as_index());
+        self.connect(r.inv().as_index(), l.as_index());
+    }
+ 
+    fn imply(&amp;mut self, l: Clause, r: Clause) {
+        self.connect(l.as_index(), r.as_index());
+        self.connect(r.inv().as_index(), l.inv().as_index());
+    }
+ 
+    fn connect(&amp;mut self, from: usize, to: usize) {
+        let p = self.head[from];
+        self.head[from] = self.link.len() as u32;
+        self.link.push(p);
+        self.end.push(to as u32);
+    }
+ 
+    fn try_assign(&amp;self) -&gt; Option&lt;Vec&lt;bool&gt;&gt; {
+        let n = self.head.len();
+        let mut c = 0;
+        let mut s = vec![];
+        let mut p = vec![];
+        let mut pre = vec![u32::MAX; n];
+        let mut comp = vec![u32::MAX; n];
+        let mut next = 0;
+        for i in 0..n {
+            if pre[i] != u32::MAX {
+                continue;
+            }
+            pre[i] = c;
+            c += 1;
+            let mut dfs = vec![(i as u32, self.head[i])];
+            s.push(i as u32);
+            p.push(i as u32);
+            while let Some((u, e)) = dfs.last_mut() {
+                if let Some(&amp;v) = self.end.get(*e as usize) {
+                    if pre[v as usize] == u32::MAX {
+                        pre[v as usize] = c;
+                        c += 1;
+                        s.push(v);
+                        p.push(v);
+                        dfs.push((v, self.head[v as usize]));
+                        continue;
+                    } else if comp[v as usize] == u32::MAX {
+                        while let Some(&amp;w) = p.last() {
+                            if pre[w as usize] &lt;= pre[v as usize] {
+                                break;
+                            }
+                            p.pop();
+                        }
+                    }
+                    *e = self.link[*e as usize];
+                } else {
+                    if Some(&amp;*u) == p.last() {
+                        p.pop();
+                        while let Some(v) = s.pop() {
+                            if comp[v as usize ^ 1] == next {
+                                return None;
+                            }
+                            comp[v as usize] = next;
+                            if v == *u {
+                                break;
+                            }
+                        }
+                        next += 1;
+                    }
+                    dfs.pop();
+                    if let Some((_, e)) = dfs.last_mut() {
+                        *e = self.link[*e as usize];
+                    }
+                }
+            }
+        }
+        Some(comp.chunks(2).map(|c| c[0] &gt; c[1]).collect())
     }
 }</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="gcd"><a class="header" href="#gcd">GCD</a></h1>

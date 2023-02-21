@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Regex - Rust PS Snippets</title>
+        <title>Convex Hull - Rust PS Snippets</title>
 
 
         <!-- Custom HTML head -->
@@ -80,7 +80,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Utility</li><li class="chapter-item expanded "><a href="skeleton.html"><strong aria-hidden="true">1.</strong> Skeleton</a></li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">2.</strong> Matrix</a></li><li class="chapter-item expanded "><a href="twosat.html"><strong aria-hidden="true">3.</strong> 2-SAT</a></li><li class="chapter-item expanded affix "><li class="part-title">Math</li><li class="chapter-item expanded "><a href="gcd.html"><strong aria-hidden="true">4.</strong> GCD</a></li><li class="chapter-item expanded "><a href="rec.html"><strong aria-hidden="true">5.</strong> Linear Recurrence (Constant Coefficient)</a></li><li class="chapter-item expanded affix "><li class="part-title">Geometry</li><li class="chapter-item expanded "><a href="convex-hull.html"><strong aria-hidden="true">6.</strong> Convex Hull</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">7.</strong> Segment Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">8.</strong> Adjacency Array</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">9.</strong> KMP</a></li><li class="chapter-item expanded "><a href="regex.html" class="active"><strong aria-hidden="true">10.</strong> Regex</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Utility</li><li class="chapter-item expanded "><a href="skeleton.html"><strong aria-hidden="true">1.</strong> Skeleton</a></li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">2.</strong> Matrix</a></li><li class="chapter-item expanded "><a href="twosat.html"><strong aria-hidden="true">3.</strong> 2-SAT</a></li><li class="chapter-item expanded affix "><li class="part-title">Math</li><li class="chapter-item expanded "><a href="gcd.html"><strong aria-hidden="true">4.</strong> GCD</a></li><li class="chapter-item expanded "><a href="rec.html"><strong aria-hidden="true">5.</strong> Linear Recurrence (Constant Coefficient)</a></li><li class="chapter-item expanded affix "><li class="part-title">Geometry</li><li class="chapter-item expanded "><a href="convex-hull.html" class="active"><strong aria-hidden="true">6.</strong> Convex Hull</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">7.</strong> Segment Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">8.</strong> Adjacency Array</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">9.</strong> KMP</a></li><li class="chapter-item expanded "><a href="regex.html"><strong aria-hidden="true">10.</strong> Regex</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -141,48 +141,54 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="regex"><a class="header" href="#regex">Regex</a></h1>
-<p>Use POSIX library function.</p>
-<pre><code class="language-rust noplayground">struct Regexp([u64; 8]);
-extern &quot;C&quot; {
-    fn regcomp(preg: *mut u64, pattern: *const u8, flags: i32);
-    fn regexec(preg: *const u64, s: *const u8, n_expr: usize, m: *mut i32, flags: i32) -&gt; i32;
+                        <h1 id="convex-hull-monotone-chain"><a class="header" href="#convex-hull-monotone-chain">Convex Hull (Monotone Chain)</a></h1>
+<p>Returns up half and down half of the convex hull.</p>
+<p>Removes straight points. change <code>!= Ordering::Less</code> to <code>== Ordering::Greater</code> and vice versa to contain straight points.</p>
+<pre><code class="language-rust noplayground">fn convex_hull(sorted_pts: &amp;[(i32, i32)]) -&gt; (Vec&lt;(i32, i32)&gt;, Vec&lt;(i32, i32)&gt;) {
+    let mut up = vec![];
+    let mut len = up.len();
+    for &amp;p in &amp;sorted_pts {
+        while len &gt;= 2 &amp;&amp; turn(up[len - 2], up[len - 1], p) != Ordering::Less {
+            up.pop();
+            len -= 1;
+        }
+        up.push(p);
+        len += 1;
+    }
+    let mut down = vec![];
+    let mut len = down.len();
+    for &amp;p in &amp;sorted_pts {
+        while len &gt;= 2 &amp;&amp; turn(down[len - 2], down[len - 1], p) != Ordering::Greater {
+            down.pop();
+            len -= 1;
+        }
+        down.push(p);
+        len += 1;
+    }
+    (up, down)
 }
 
-impl Regexp {
-    fn new(pattern: &amp;str, case_insensitive: bool) -&gt; Self {
-        let flag = if case_insensitive { 3 } else { 1 };
-        let mut tmp = pattern.as_bytes().to_vec();
-        tmp.push(0);
-        let mut v = [0; 8];
-        unsafe { regcomp(v.as_mut_ptr(), tmp.as_ptr(), flag) };
-        Self(v)
-    }
-
-    fn find(&amp;self, text: &amp;str) -&gt; Option&lt;(usize, usize)&gt; {
-        // ALL THESE UNSAFE's ARE UB. Only for intended use.
-        let end = unsafe { text.as_ptr().cast_mut().add(text.len()) };
-        let save = unsafe { end.read_volatile() };
-        unsafe { end.write_volatile(0) };
-        let mut m = [0; 2];
-        let result = unsafe { regexec(self.0.as_ptr(), text.as_ptr(), 1, m.as_mut_ptr(), 0) };
-        unsafe { end.write_volatile(save) };
-        if result == 0 {
-            Some((m[0] as usize, m[1] as usize))
-        } else {
-            None
-        }
-    }
+// Less =&gt; cw
+// Greater =&gt; ccw
+fn turn((ax, ay): (i32, i32), (bx, by): (i32, i32), (cx, cy): (i32, i32)) -&gt; Ordering {
+    let abx = (bx - ax) as i64;
+    let aby = (by - ay) as i64;
+    let bcx = (cx - bx) as i64;
+    let bcy = (cy - by) as i64;
+    (abx * bcy).cmp(&amp;(aby * bcx))
 }</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="kmp.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="rec.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
+                            <a rel="next" href="segment-tree.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
 
                         <div style="clear: both"></div>
                     </nav>
@@ -190,10 +196,13 @@ impl Regexp {
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="kmp.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="rec.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
+                    <a rel="next" href="segment-tree.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
             </nav>
 
         </div>

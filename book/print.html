@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Utility</li><li class="chapter-item expanded "><a href="skeleton.html"><strong aria-hidden="true">1.</strong> Skeleton</a></li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">2.</strong> Matrix</a></li><li class="chapter-item expanded "><a href="twosat.html"><strong aria-hidden="true">3.</strong> 2-SAT</a></li><li class="chapter-item expanded affix "><li class="part-title">Math</li><li class="chapter-item expanded "><a href="gcd.html"><strong aria-hidden="true">4.</strong> GCD</a></li><li class="chapter-item expanded "><a href="rec.html"><strong aria-hidden="true">5.</strong> Linear Recurrence (Constant Coefficient)</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">6.</strong> Segment Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">7.</strong> Adjacency Array</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">8.</strong> KMP</a></li><li class="chapter-item expanded "><a href="regex.html"><strong aria-hidden="true">9.</strong> Regex</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Utility</li><li class="chapter-item expanded "><a href="skeleton.html"><strong aria-hidden="true">1.</strong> Skeleton</a></li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">2.</strong> Matrix</a></li><li class="chapter-item expanded "><a href="twosat.html"><strong aria-hidden="true">3.</strong> 2-SAT</a></li><li class="chapter-item expanded affix "><li class="part-title">Math</li><li class="chapter-item expanded "><a href="gcd.html"><strong aria-hidden="true">4.</strong> GCD</a></li><li class="chapter-item expanded "><a href="rec.html"><strong aria-hidden="true">5.</strong> Linear Recurrence (Constant Coefficient)</a></li><li class="chapter-item expanded affix "><li class="part-title">Geometry</li><li class="chapter-item expanded "><a href="convex-hull.html"><strong aria-hidden="true">6.</strong> Convex Hull</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">7.</strong> Segment Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">8.</strong> Adjacency Array</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">9.</strong> KMP</a></li><li class="chapter-item expanded "><a href="regex.html"><strong aria-hidden="true">10.</strong> Regex</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -444,6 +444,42 @@ fn multiply(n: usize, a: &amp;[u32], b: &amp;[u32], c: &amp;mut [u32]) {
             }
         }
     }
+}</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="convex-hull-monotone-chain"><a class="header" href="#convex-hull-monotone-chain">Convex Hull (Monotone Chain)</a></h1>
+<p>Returns up half and down half of the convex hull.</p>
+<p>Removes straight points. change <code>!= Ordering::Less</code> to <code>== Ordering::Greater</code> and vice versa to contain straight points.</p>
+<pre><code class="language-rust noplayground">fn convex_hull(sorted_pts: &amp;[(i32, i32)]) -&gt; (Vec&lt;(i32, i32)&gt;, Vec&lt;(i32, i32)&gt;) {
+    let mut up = vec![];
+    let mut len = up.len();
+    for &amp;p in &amp;sorted_pts {
+        while len &gt;= 2 &amp;&amp; turn(up[len - 2], up[len - 1], p) != Ordering::Less {
+            up.pop();
+            len -= 1;
+        }
+        up.push(p);
+        len += 1;
+    }
+    let mut down = vec![];
+    let mut len = down.len();
+    for &amp;p in &amp;sorted_pts {
+        while len &gt;= 2 &amp;&amp; turn(down[len - 2], down[len - 1], p) != Ordering::Greater {
+            down.pop();
+            len -= 1;
+        }
+        down.push(p);
+        len += 1;
+    }
+    (up, down)
+}
+
+// Less =&gt; cw
+// Greater =&gt; ccw
+fn turn((ax, ay): (i32, i32), (bx, by): (i32, i32), (cx, cy): (i32, i32)) -&gt; Ordering {
+    let abx = (bx - ax) as i64;
+    let aby = (by - ay) as i64;
+    let bcx = (cx - bx) as i64;
+    let bcy = (cy - by) as i64;
+    (abx * bcy).cmp(&amp;(aby * bcx))
 }</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="segment-tree"><a class="header" href="#segment-tree">Segment Tree</a></h1>
 <pre><code class="language-rust noplayground">struct SegTree&lt;C, A, T&gt; {

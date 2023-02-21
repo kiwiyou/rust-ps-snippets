@@ -13,6 +13,10 @@
 - [GCD](gcd.md)
 - [Linear Recurrence (Constant Coefficient)](rec.md)
 
+# Geometry
+
+- [Convex Hull](convex-hull.md)
+
 # Data Structures
 
 - [Segment Tree](segment-tree.md)

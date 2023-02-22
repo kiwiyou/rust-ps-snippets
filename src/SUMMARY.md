@@ -12,6 +12,7 @@
 
 - [GCD](gcd.md)
 - [Linear Recurrence (Constant Coefficient)](rec.md)
+- [Constant Division / Modulo](cdiv.md)
 
 # Geometry
 

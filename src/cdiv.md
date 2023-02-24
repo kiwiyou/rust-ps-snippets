@@ -37,7 +37,7 @@ struct ModI32(u64, i32);
 impl ModI32 {
     fn new(div: i32) -> Self {
         let abs = div.abs();
-        let mut m = !0 / abs as u64 + 1;
+        let mut m = (!0 / abs as u64).wrapping_add(1);
         if (abs & (abs - 1)) == 0 {
             m += 1;
         }
@@ -81,7 +81,7 @@ struct ModU64(u128, u64);
 
 impl ModU64 {
     fn new(div: u64) -> Self {
-        Self(!0u128 / div as u128 + 1, div)
+        Self((!0u128 / div as u128).wrapping_add(1), div)
     }
     fn multop(a: u128, b: u64) -> u64 {
         let mut bottom = (a as u64 as u128) * b as u128;
@@ -95,6 +95,9 @@ impl ModU64 {
     }
     fn quot(&self, a: u64) -> u64 {
         Self::multop(self.0, a)
+    }
+    fn divisible(&self, a: u64) -> bool {
+        self.0.wrapping_mul(a as u128) <= self.0.wrapping_sub(1)
     }
 }
 ```

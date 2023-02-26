@@ -5,6 +5,7 @@ struct SegTree<C, A, T> {
     e: T,
     v: Vec<T>,
     offset: usize,
+    n: usize,
     combine: C,
     apply: A,
 }
@@ -26,6 +27,7 @@ where
             e,
             v,
             offset,
+            n,
             combine,
             apply,
         }
@@ -43,7 +45,7 @@ where
             + match range.end_bound() {
                 Included(&x) => x + 1,
                 Excluded(&x) => x,
-                Unbounded => self.offset,
+                Unbounded => self.n,
             };
         let mut lsum = self.e;
         let mut rsum = self.e;
@@ -78,7 +80,7 @@ where
     fn partition_point<P: Fn(T) -> bool>(&self, pred: P) -> usize {
         let mut p = 1;
         if pred(self.v[p]) {
-            self.offset
+            self.n
         } else {
             let mut pivot = self.e;
             while p < self.offset {

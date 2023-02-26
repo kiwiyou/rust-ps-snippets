@@ -21,7 +21,7 @@ where
     {
         let offset = n.next_power_of_two();
         let mut v = vec![e; offset];
-        v.extend(init.into_iter().take(offset));
+        v.extend(init.into_iter().take(n));
         v.resize(offset * 2, e);
         Self {
             e,

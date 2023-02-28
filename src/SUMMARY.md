@@ -7,6 +7,7 @@
 - [Skeleton](skeleton.md)
 - [Matrix](matrix.md)
 - [2-SAT](twosat.md)
+- [Pseudo Random Number Generator](prng.md)
 
 # Math
 

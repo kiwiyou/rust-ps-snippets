@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Utility</li><li class="chapter-item expanded "><a href="skeleton.html"><strong aria-hidden="true">1.</strong> Skeleton</a></li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">2.</strong> Matrix</a></li><li class="chapter-item expanded "><a href="twosat.html"><strong aria-hidden="true">3.</strong> 2-SAT</a></li><li class="chapter-item expanded affix "><li class="part-title">Math</li><li class="chapter-item expanded "><a href="gcd.html"><strong aria-hidden="true">4.</strong> GCD</a></li><li class="chapter-item expanded "><a href="rec.html"><strong aria-hidden="true">5.</strong> Linear Recurrence (Constant Coefficient)</a></li><li class="chapter-item expanded "><a href="cdiv.html"><strong aria-hidden="true">6.</strong> Constant Division / Modulo</a></li><li class="chapter-item expanded affix "><li class="part-title">Geometry</li><li class="chapter-item expanded "><a href="convex-hull.html"><strong aria-hidden="true">7.</strong> Convex Hull</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">8.</strong> Segment Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">9.</strong> Adjacency Array</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">10.</strong> KMP</a></li><li class="chapter-item expanded "><a href="regex.html"><strong aria-hidden="true">11.</strong> Regex</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Utility</li><li class="chapter-item expanded "><a href="skeleton.html"><strong aria-hidden="true">1.</strong> Skeleton</a></li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">2.</strong> Matrix</a></li><li class="chapter-item expanded "><a href="twosat.html"><strong aria-hidden="true">3.</strong> 2-SAT</a></li><li class="chapter-item expanded "><a href="prng.html"><strong aria-hidden="true">4.</strong> Pseudo Random Number Generator</a></li><li class="chapter-item expanded affix "><li class="part-title">Math</li><li class="chapter-item expanded "><a href="gcd.html"><strong aria-hidden="true">5.</strong> GCD</a></li><li class="chapter-item expanded "><a href="rec.html"><strong aria-hidden="true">6.</strong> Linear Recurrence (Constant Coefficient)</a></li><li class="chapter-item expanded "><a href="cdiv.html"><strong aria-hidden="true">7.</strong> Constant Division / Modulo</a></li><li class="chapter-item expanded affix "><li class="part-title">Geometry</li><li class="chapter-item expanded "><a href="convex-hull.html"><strong aria-hidden="true">8.</strong> Convex Hull</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">9.</strong> Segment Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">10.</strong> Adjacency Array</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">11.</strong> KMP</a></li><li class="chapter-item expanded "><a href="regex.html"><strong aria-hidden="true">12.</strong> Regex</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -368,6 +368,43 @@ impl SAT {
             }
         }
         Some(comp.chunks(2).map(|c| c[0] &gt; c[1]).collect())
+    }
+}</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="pseudo-random-number-generator"><a class="header" href="#pseudo-random-number-generator">Pseudo Random Number Generator</a></h1>
+<p>// Reference: https://github.com/BrutPitt/fastPRNG</p>
+<pre><code class="language-rust noplayground">struct Rng([u64; 4]);
+
+impl Rng {
+    fn split_mix(v: u64) -&gt; u64 {
+        let mut z = v + 0x9e3779b97f4a7c15;
+        z = (z ^ (z &gt;&gt; 30)) * 0xbf58476d1ce4e5b9;
+        z = (z ^ (z &gt;&gt; 27)) * 0x94d049bb133111eb;
+        z ^ (z &gt;&gt; 31)
+    }
+    fn new() -&gt; Self {
+        let mut seed = 0;
+        // This is hardware RNG
+        unsafe { std::arch::x86_64::_rdrand64_step(&amp;mut seed) };
+        let mut prev = seed;
+        Self(std::array::from_fn(|_| {
+            prev = Self::split_mix(prev);
+            prev
+        }))
+    }
+    fn next(&amp;mut self, n: u64) -&gt; u64 {
+        let [x, y, z, c] = &amp;mut self.0;
+        let t = x.wrapping_shl(58) + *c;
+        *c = *x &gt;&gt; 6;
+        *x = x.wrapping_add(t);
+        if *x &lt; t {
+            *c += 1;
+        }
+        *z = z.wrapping_mul(6906969069).wrapping_add(1234567);
+        *y ^= y.wrapping_shl(13);
+        *y ^= *y &gt;&gt; 17;
+        *y ^= y.wrapping_shl(43);
+        let base = x.wrapping_add(*y).wrapping_add(*z);
+        ((base as u128 * n as u128) &gt;&gt; 64) as u64
     }
 }</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="gcd"><a class="header" href="#gcd">GCD</a></h1>

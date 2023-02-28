@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Adjacency Array - Rust PS Snippets</title>
+        <title>Pseudo Random Number Generator - Rust PS Snippets</title>
 
 
         <!-- Custom HTML head -->
@@ -80,7 +80,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Utility</li><li class="chapter-item expanded "><a href="skeleton.html"><strong aria-hidden="true">1.</strong> Skeleton</a></li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">2.</strong> Matrix</a></li><li class="chapter-item expanded "><a href="twosat.html"><strong aria-hidden="true">3.</strong> 2-SAT</a></li><li class="chapter-item expanded "><a href="prng.html"><strong aria-hidden="true">4.</strong> Pseudo Random Number Generator</a></li><li class="chapter-item expanded affix "><li class="part-title">Math</li><li class="chapter-item expanded "><a href="gcd.html"><strong aria-hidden="true">5.</strong> GCD</a></li><li class="chapter-item expanded "><a href="rec.html"><strong aria-hidden="true">6.</strong> Linear Recurrence (Constant Coefficient)</a></li><li class="chapter-item expanded "><a href="cdiv.html"><strong aria-hidden="true">7.</strong> Constant Division / Modulo</a></li><li class="chapter-item expanded affix "><li class="part-title">Geometry</li><li class="chapter-item expanded "><a href="convex-hull.html"><strong aria-hidden="true">8.</strong> Convex Hull</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">9.</strong> Segment Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html" class="active"><strong aria-hidden="true">10.</strong> Adjacency Array</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">11.</strong> KMP</a></li><li class="chapter-item expanded "><a href="regex.html"><strong aria-hidden="true">12.</strong> Regex</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Utility</li><li class="chapter-item expanded "><a href="skeleton.html"><strong aria-hidden="true">1.</strong> Skeleton</a></li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">2.</strong> Matrix</a></li><li class="chapter-item expanded "><a href="twosat.html"><strong aria-hidden="true">3.</strong> 2-SAT</a></li><li class="chapter-item expanded "><a href="prng.html" class="active"><strong aria-hidden="true">4.</strong> Pseudo Random Number Generator</a></li><li class="chapter-item expanded affix "><li class="part-title">Math</li><li class="chapter-item expanded "><a href="gcd.html"><strong aria-hidden="true">5.</strong> GCD</a></li><li class="chapter-item expanded "><a href="rec.html"><strong aria-hidden="true">6.</strong> Linear Recurrence (Constant Coefficient)</a></li><li class="chapter-item expanded "><a href="cdiv.html"><strong aria-hidden="true">7.</strong> Constant Division / Modulo</a></li><li class="chapter-item expanded affix "><li class="part-title">Geometry</li><li class="chapter-item expanded "><a href="convex-hull.html"><strong aria-hidden="true">8.</strong> Convex Hull</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">9.</strong> Segment Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">10.</strong> Adjacency Array</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">11.</strong> KMP</a></li><li class="chapter-item expanded "><a href="regex.html"><strong aria-hidden="true">12.</strong> Regex</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -141,47 +141,41 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="adjacency-array"><a class="header" href="#adjacency-array">Adjacency Array</a></h1>
-<p>Graphs are represented with <strong>Adjacency Array</strong>s.
-All edges on the graph are stored in a single array
-such that edges with the same starting vertex are connected like a linked list.</p>
-<ul>
-<li><code>edge</code> stores previous edge indices.</li>
-<li><code>head</code> stores indices of edge list heads (or <code>u32::MAX</code> if none).</li>
-</ul>
-<pre><code class="language-rust noplayground">struct Graph&lt;T&gt; {
-    head: Vec&lt;u32&gt;,
-    edge: Vec&lt;u32&gt;,
-}
+                        <h1 id="pseudo-random-number-generator"><a class="header" href="#pseudo-random-number-generator">Pseudo Random Number Generator</a></h1>
+<p>// Reference: https://github.com/BrutPitt/fastPRNG</p>
+<pre><code class="language-rust noplayground">struct Rng([u64; 4]);
 
-impl&lt;T&gt; Graph&lt;T&gt; {
-    fn with_capacity(v: usize, e: usize) -&gt; Self {
-        Self {
-            head: vec![u32::MAX; v],
-            edge: Vec::with_capacity(e),
+impl Rng {
+    fn split_mix(v: u64) -&gt; u64 {
+        let mut z = v + 0x9e3779b97f4a7c15;
+        z = (z ^ (z &gt;&gt; 30)) * 0xbf58476d1ce4e5b9;
+        z = (z ^ (z &gt;&gt; 27)) * 0x94d049bb133111eb;
+        z ^ (z &gt;&gt; 31)
+    }
+    fn new() -&gt; Self {
+        let mut seed = 0;
+        // This is hardware RNG
+        unsafe { std::arch::x86_64::_rdrand64_step(&amp;mut seed) };
+        let mut prev = seed;
+        Self(std::array::from_fn(|_| {
+            prev = Self::split_mix(prev);
+            prev
+        }))
+    }
+    fn next(&amp;mut self, n: u64) -&gt; u64 {
+        let [x, y, z, c] = &amp;mut self.0;
+        let t = x.wrapping_shl(58) + *c;
+        *c = *x &gt;&gt; 6;
+        *x = x.wrapping_add(t);
+        if *x &lt; t {
+            *c += 1;
         }
-    }
-
-    fn connect(&amp;mut self, from: usize, to: usize, data: T) {
-        let prev = self.head[from];
-        self.head[from] = self.edge.len() as u32;
-        self.edge.push(prev);
-    }
-
-    fn neighbor(&amp;self, from: usize) -&gt; Neighbor&lt;T&gt; {
-        Neighbor(self, self.head[from])
-    }
-}
-
-struct Neighbor&lt;'g, T&gt;(&amp;'g Graph&lt;T&gt;, u32);
-
-impl&lt;'g, T&gt; Iterator for Neighbor&lt;'g, T&gt; {
-    type Item = usize;
-
-    fn next(&amp;mut self) -&gt; Option&lt;Self::Item&gt; {
-        let &amp;next = self.0.edge.get(self.1 as usize)?;
-        self.1 = next;
-        Some(self.1)
+        *z = z.wrapping_mul(6906969069).wrapping_add(1234567);
+        *y ^= y.wrapping_shl(13);
+        *y ^= *y &gt;&gt; 17;
+        *y ^= y.wrapping_shl(43);
+        let base = x.wrapping_add(*y).wrapping_add(*z);
+        ((base as u128 * n as u128) &gt;&gt; 64) as u64
     }
 }</code></pre>
 
@@ -189,11 +183,11 @@ impl&lt;'g, T&gt; Iterator for Neighbor&lt;'g, T&gt; {
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="segment-tree.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="twosat.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next" href="kmp.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="gcd.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -203,11 +197,11 @@ impl&lt;'g, T&gt; Iterator for Neighbor&lt;'g, T&gt; {
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="segment-tree.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="twosat.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next" href="kmp.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="gcd.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

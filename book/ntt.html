@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Segment Tree - Rust PS Snippets</title>
+        <title>Number Theoretic Transform - Rust PS Snippets</title>
 
 
         <!-- Custom HTML head -->
@@ -80,7 +80,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Utility</li><li class="chapter-item expanded "><a href="skeleton.html"><strong aria-hidden="true">1.</strong> Skeleton</a></li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">2.</strong> Matrix</a></li><li class="chapter-item expanded "><a href="twosat.html"><strong aria-hidden="true">3.</strong> 2-SAT</a></li><li class="chapter-item expanded "><a href="prng.html"><strong aria-hidden="true">4.</strong> Pseudo Random Number Generator</a></li><li class="chapter-item expanded affix "><li class="part-title">Math</li><li class="chapter-item expanded "><a href="gcd.html"><strong aria-hidden="true">5.</strong> GCD</a></li><li class="chapter-item expanded "><a href="rec.html"><strong aria-hidden="true">6.</strong> Linear Recurrence (Constant Coefficient)</a></li><li class="chapter-item expanded "><a href="cdiv.html"><strong aria-hidden="true">7.</strong> Constant Division / Modulo</a></li><li class="chapter-item expanded "><a href="ntt.html"><strong aria-hidden="true">8.</strong> Number Theoretic Transform</a></li><li class="chapter-item expanded affix "><li class="part-title">Geometry</li><li class="chapter-item expanded "><a href="convex-hull.html"><strong aria-hidden="true">9.</strong> Convex Hull</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html" class="active"><strong aria-hidden="true">10.</strong> Segment Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">11.</strong> Adjacency Array</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">12.</strong> KMP</a></li><li class="chapter-item expanded "><a href="regex.html"><strong aria-hidden="true">13.</strong> Regex</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Utility</li><li class="chapter-item expanded "><a href="skeleton.html"><strong aria-hidden="true">1.</strong> Skeleton</a></li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">2.</strong> Matrix</a></li><li class="chapter-item expanded "><a href="twosat.html"><strong aria-hidden="true">3.</strong> 2-SAT</a></li><li class="chapter-item expanded "><a href="prng.html"><strong aria-hidden="true">4.</strong> Pseudo Random Number Generator</a></li><li class="chapter-item expanded affix "><li class="part-title">Math</li><li class="chapter-item expanded "><a href="gcd.html"><strong aria-hidden="true">5.</strong> GCD</a></li><li class="chapter-item expanded "><a href="rec.html"><strong aria-hidden="true">6.</strong> Linear Recurrence (Constant Coefficient)</a></li><li class="chapter-item expanded "><a href="cdiv.html"><strong aria-hidden="true">7.</strong> Constant Division / Modulo</a></li><li class="chapter-item expanded "><a href="ntt.html" class="active"><strong aria-hidden="true">8.</strong> Number Theoretic Transform</a></li><li class="chapter-item expanded affix "><li class="part-title">Geometry</li><li class="chapter-item expanded "><a href="convex-hull.html"><strong aria-hidden="true">9.</strong> Convex Hull</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">10.</strong> Segment Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">11.</strong> Adjacency Array</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">12.</strong> KMP</a></li><li class="chapter-item expanded "><a href="regex.html"><strong aria-hidden="true">13.</strong> Regex</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -141,99 +141,95 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="segment-tree"><a class="header" href="#segment-tree">Segment Tree</a></h1>
-<pre><code class="language-rust noplayground">struct SegTree&lt;C, A, T&gt; {
-    e: T,
-    v: Vec&lt;T&gt;,
-    offset: usize,
-    n: usize,
-    combine: C,
-    apply: A,
+                        <h1 id="number-theoretic-transform"><a class="header" href="#number-theoretic-transform">Number Theoretic Transform</a></h1>
+<pre><code class="language-rust noplayground">struct NttParam {
+    m: ModU64,
+    u: u64,
+    ui: u64,
+    s: u32,
 }
 
-impl&lt;C, A, T&gt; SegTree&lt;C, A, T&gt;
-where
-    T: Copy,
-    C: Fn(T, T) -&gt; T,
-{
-    fn new&lt;I&gt;(n: usize, e: T, combine: C, apply: A, init: I) -&gt; Self
-    where
-        I: IntoIterator&lt;Item = T&gt;,
-    {
-        let offset = n.next_power_of_two();
-        let mut v = vec![e; offset];
-        v.extend(init.into_iter().take(n));
-        v.resize(offset * 2, e);
-        Self {
-            e,
-            v,
-            offset,
-            n,
-            combine,
-            apply,
-        }
-    }
+const NTT: &amp;[NttParam] = &amp;[NttParam {
+    m: ModU64::new(998244353),
+    u: 15311432,
+    ui: 469870224,
+    s: 23,
+}];
 
-    fn query&lt;B: std::ops::RangeBounds&lt;usize&gt;&gt;(&amp;self, range: B) -&gt; T {
-        use std::ops::Bound::*;
-        let mut l = self.offset
-            + match range.start_bound() {
-                Included(&amp;x) =&gt; x,
-                Excluded(&amp;x) =&gt; x + 1,
-                Unbounded =&gt; 0,
-            };
-        let mut r = self.offset
-            + match range.end_bound() {
-                Included(&amp;x) =&gt; x + 1,
-                Excluded(&amp;x) =&gt; x,
-                Unbounded =&gt; self.n,
-            };
-        let mut lsum = self.e;
-        let mut rsum = self.e;
-        while l &lt; r {
-            if l &amp; 1 != 0 {
-                lsum = (self.combine)(lsum, self.v[l]);
-                l += 1;
+impl NttParam {
+    fn run(&amp;self, a: &amp;mut [u32], inv: bool) {
+        let n = a.len();
+        let s = n.leading_zeros() + 1;
+        for i in 0..n {
+            let r = i.reverse_bits() &gt;&gt; s;
+            if i &lt; r {
+                a.swap(i, r);
             }
-            if r &amp; 1 != 0 {
-                r -= 1;
-                rsum = (self.combine)(self.v[r], rsum);
+        }
+        let u = if inv { self.ui } else { self.u };
+        for k in 1..=n.trailing_zeros() {
+            let mut wlen = u;
+            for _ in k..self.s {
+                wlen = self.m.rem(wlen * wlen);
             }
-            l &gt;&gt;= 1;
-            r &gt;&gt;= 1;
-        }
-        (self.combine)(lsum, rsum)
-    }
-
-    fn update&lt;U&gt;(&amp;mut self, mut i: usize, u: U)
-    where
-        U: Copy,
-        A: Fn(&amp;mut T, U),
-    {
-        i += self.offset;
-        (self.apply)(&amp;mut self.v[i], u);
-        while i &gt; 1 {
-            i &gt;&gt;= 1;
-            self.v[i] = (self.combine)(self.v[i &lt;&lt; 1], self.v[i &lt;&lt; 1 | 1]);
-        }
-    }
-
-    fn partition_point&lt;P: Fn(T) -&gt; bool&gt;(&amp;self, pred: P) -&gt; usize {
-        let mut p = 1;
-        if pred(self.v[p]) {
-            self.n
-        } else {
-            let mut pivot = self.e;
-            while p &lt; self.offset {
-                p &lt;&lt;= 1;
-                let test = (self.combine)(pivot, self.v[p]);
-                if pred(test) {
-                    pivot = test;
-                    p |= 1;
+            let kh = 1 &lt;&lt; (k - 1);
+            for i in 0..(n + (1 &lt;&lt; k) - 1) &gt;&gt; k {
+                let i = i &lt;&lt; k;
+                let mut w = 1;
+                for j in 0..kh {
+                    let u = a[i + j] as u64;
+                    let v = self.m.rem(a[i + j + kh] as u64 * w);
+                    let mut s = u + v;
+                    if s &gt;= self.m.1 {
+                        s -= self.m.1;
+                    }
+                    a[i + j] = s as u32;
+                    let mut d = u + self.m.1 - v;
+                    if d &gt;= self.m.1 {
+                        d -= self.m.1;
+                    }
+                    a[i + j + kh] = d as u32;
+                    w = self.m.rem(w * wlen);
                 }
             }
-            p - self.offset
         }
+        if inv {
+            let p = self.m.1 as i64;
+            let ni = ((egcd(n as i64, p).1 % p + p) % p) as u64;
+            for x in a {
+                *x = self.m.rem(*x as u64 * ni) as u32;
+            }
+        }
+    }
+}
+
+fn egcd(mut a: i64, mut b: i64) -&gt; (i64, i64, i64) {
+    let (mut x, mut y, mut x1, mut y1) = (1, 0, 0, 1);
+    while b != 0 {
+        let q = a / b;
+        (x, x1) = (x1, x - q * x1);
+        (y, y1) = (y1, y - q * y1);
+        (a, b) = (b, a - q * b);
+    }
+    (a, x, y)
+}
+
+#[derive(Copy, Clone)]
+struct ModU64(u128, u64);
+
+impl ModU64 {
+    const fn new(div: u64) -&gt; Self {
+        Self((!0u128 / div as u128).wrapping_add(1), div)
+    }
+    fn multop(a: u128, b: u64) -&gt; u64 {
+        let mut bottom = (a as u64 as u128) * b as u128;
+        bottom &gt;&gt;= 64;
+        let top = (a &gt;&gt; 64) * b as u128;
+        ((bottom + top) &gt;&gt; 64) as u64
+    }
+    fn rem(&amp;self, a: u64) -&gt; u64 {
+        let low = self.0.wrapping_mul(a as u128);
+        Self::multop(low, self.1)
     }
 }</code></pre>
 
@@ -241,11 +237,11 @@ where
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="convex-hull.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="cdiv.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next" href="adjacency-array.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="convex-hull.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -255,11 +251,11 @@ where
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="convex-hull.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="cdiv.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next" href="adjacency-array.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="convex-hull.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

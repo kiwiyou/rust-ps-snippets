@@ -14,6 +14,7 @@
 - [GCD](gcd.md)
 - [Linear Recurrence (Constant Coefficient)](rec.md)
 - [Constant Division / Modulo](cdiv.md)
+- [Number Theoretic Transform](ntt.md)
 
 # Geometry
 

@@ -7,6 +7,7 @@
 - [Matrix](matrix.md)
 - [2-SAT](twosat.md)
 - [Pseudo Random Number Generator](prng.md)
+- [Arbitrary Precision Integer](bigint.md)
 
 # Math
 

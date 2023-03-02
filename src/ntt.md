@@ -13,6 +13,11 @@ static NTT: &[NttParam] = &[NttParam {
     u: 15311432,
     ui: 469870224,
     s: 23,
+}, NttParam {
+    m: ModU64::new(1107296257),
+    u: 1087287097,
+    ui: 623044540,
+    s: 25,
 }];
 
 impl NttParam {

@@ -148,23 +148,23 @@
 struct ModU32(u64, u32);
 
 impl ModU32 {
-    fn new(div: u32) -&gt; Self {
+    const fn new(div: u32) -&gt; Self {
         Self((!0 / div as u64).wrapping_add(1), div)
     }
-    fn rem(&amp;self, a: u32) -&gt; u32 {
+    const fn rem(&amp;self, a: u32) -&gt; u32 {
         let low = self.0.wrapping_mul(a as u64);
         ((low as u128 * self.1 as u128) &gt;&gt; 64) as u32
     }
-    fn quot(&amp;self, a: u32) -&gt; u32 {
+    const fn quot(&amp;self, a: u32) -&gt; u32 {
         ((self.0 as u128 * a as u128) &gt;&gt; 64) as u32
     }
-    fn quotrem(&amp;self, a: u32) -&gt; (u32, u32) {
+    const fn quotrem(&amp;self, a: u32) -&gt; (u32, u32) {
         let full = self.0 as u128 * a as u128;
         let quot = full &gt;&gt; 64;
         let rem = (full as u64 as u128 * self.1 as u128) &gt;&gt; 64;
         (quot as u32, rem as u32)
     }
-    fn divisible(&amp;self, a: u32) -&gt; bool {
+    const fn divisible(&amp;self, a: u32) -&gt; bool {
         self.0.wrapping_mul(a as u64) &lt;= self.0.wrapping_sub(1)
     }
 }
@@ -174,7 +174,7 @@ impl ModU32 {
 struct ModI32(u64, i32);
 
 impl ModI32 {
-    fn new(div: i32) -&gt; Self {
+    const fn new(div: i32) -&gt; Self {
         let abs = div.abs();
         let mut m = (!0 / abs as u64).wrapping_add(1);
         if (abs &amp; (abs - 1)) == 0 {
@@ -182,12 +182,12 @@ impl ModI32 {
         }
         Self(m, div)
     }
-    fn rem(&amp;self, a: i32) -&gt; i32 {
+    const fn rem(&amp;self, a: i32) -&gt; i32 {
         let low = self.0.wrapping_mul(a as u64);
         let high = ((low as u128 * self.1.abs() as u128) &gt;&gt; 64) as i32;
         high - ((self.1 - 1) &amp; (a &gt;&gt; 31))
     }
-    fn quot(&amp;self, a: i32) -&gt; i32 {
+    const fn quot(&amp;self, a: i32) -&gt; i32 {
         let mut high = ((self.0 as i128 * a as i128) &gt;&gt; 64) as u64;
         if a &lt; 0 {
             high = high.wrapping_add(1);
@@ -198,7 +198,7 @@ impl ModI32 {
             high as i32
         }
     }
-    fn quotrem(&amp;self, a: i32) -&gt; (i32, i32) {
+    const fn quotrem(&amp;self, a: i32) -&gt; (i32, i32) {
         let full = self.0 as i128 * a as i128;
         let mut high = (full &gt;&gt; 64) as u64;
         if a &lt; 0 {
@@ -219,23 +219,23 @@ impl ModI32 {
 struct ModU64(u128, u64);
 
 impl ModU64 {
-    fn new(div: u64) -&gt; Self {
+    const fn new(div: u64) -&gt; Self {
         Self((!0u128 / div as u128).wrapping_add(1), div)
     }
-    fn multop(a: u128, b: u64) -&gt; u64 {
+    const fn multop(a: u128, b: u64) -&gt; u64 {
         let mut bottom = (a as u64 as u128) * b as u128;
         bottom &gt;&gt;= 64;
         let top = (a &gt;&gt; 64) * b as u128;
         ((bottom + top) &gt;&gt; 64) as u64
     }
-    fn rem(&amp;self, a: u64) -&gt; u64 {
+    const fn rem(&amp;self, a: u64) -&gt; u64 {
         let low = self.0.wrapping_mul(a as u128);
         Self::multop(low, self.1)
     }
-    fn quot(&amp;self, a: u64) -&gt; u64 {
+    const fn quot(&amp;self, a: u64) -&gt; u64 {
         Self::multop(self.0, a)
     }
-    fn divisible(&amp;self, a: u64) -&gt; bool {
+    const fn divisible(&amp;self, a: u64) -&gt; bool {
         self.0.wrapping_mul(a as u128) &lt;= self.0.wrapping_sub(1)
     }
 }</code></pre>

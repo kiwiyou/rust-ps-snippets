@@ -1,6 +1,6 @@
 # Pseudo Random Number Generator
 
-// Reference: https://github.com/BrutPitt/fastPRNG
+Reference: https://github.com/BrutPitt/fastPRNG
 
 ```rust,noplayground
 struct Rng([u64; 4]);

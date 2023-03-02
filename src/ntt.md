@@ -8,7 +8,7 @@ struct NttParam {
     s: u32,
 }
 
-const NTT: &[NttParam] = &[NttParam {
+static NTT: &[NttParam] = &[NttParam {
     m: ModU64::new(998244353),
     u: 15311432,
     ui: 469870224,

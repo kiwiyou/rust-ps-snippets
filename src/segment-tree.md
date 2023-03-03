@@ -23,6 +23,9 @@ where
         let mut v = vec![e; offset];
         v.extend(init.into_iter().take(n));
         v.resize(offset * 2, e);
+        for i in (1..offset).rev() {
+            v[i] = combine(v[i << 1], v[i << 1 | 1]);
+        }
         Self {
             e,
             v,

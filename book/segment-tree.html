@@ -160,7 +160,7 @@ where
     where
         I: IntoIterator&lt;Item = T&gt;,
     {
-        let offset = n.next_power_of_two();
+        let offset = n;
         let mut v = vec![e; offset];
         v.extend(init.into_iter().take(n));
         v.resize(offset * 2, e);
@@ -221,22 +221,28 @@ where
         }
     }
 
-    fn partition_point&lt;P: Fn(T) -&gt; bool&gt;(&amp;self, pred: P) -&gt; usize {
-        let mut p = 1;
-        if pred(self.v[p]) {
-            self.n
-        } else {
-            let mut pivot = self.e;
-            while p &lt; self.offset {
-                p &lt;&lt;= 1;
-                let test = (self.combine)(pivot, self.v[p]);
-                if pred(test) {
-                    pivot = test;
-                    p |= 1;
+    fn partition_point&lt;P: Fn(T) -&gt; bool&gt;(&amp;self, left: usize, pred: P) -&gt; usize {
+        let mut p = left + self.offset;
+        let mut value = self.e;
+        loop {
+            if p &amp; 1 != 0 {
+                if pred((self.combine)(value, self.v[p])) {
+                value = (self.combine)(value, self.v[p]);
+                    p += 1;
+                } else {
+                    break;
                 }
             }
-            p - self.offset
+            p &gt;&gt;= 1;
         }
+        while p &lt; self.offset {
+            p &lt;&lt;= 1;
+            if pred((self.combine)(value, self.v[p])) {
+                value = (self.combine)(value, self.v[p]);
+                p |= 1;
+            }
+        }
+        p - self.offset
     }
 }</code></pre>
 

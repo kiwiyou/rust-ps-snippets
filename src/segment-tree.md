@@ -19,7 +19,7 @@ where
     where
         I: IntoIterator<Item = T>,
     {
-        let offset = n.next_power_of_two();
+        let offset = n;
         let mut v = vec![e; offset];
         v.extend(init.into_iter().take(n));
         v.resize(offset * 2, e);
@@ -80,22 +80,28 @@ where
         }
     }
 
-    fn partition_point<P: Fn(T) -> bool>(&self, pred: P) -> usize {
-        let mut p = 1;
-        if pred(self.v[p]) {
-            self.n
-        } else {
-            let mut pivot = self.e;
-            while p < self.offset {
-                p <<= 1;
-                let test = (self.combine)(pivot, self.v[p]);
-                if pred(test) {
-                    pivot = test;
-                    p |= 1;
+    fn partition_point<P: Fn(T) -> bool>(&self, left: usize, pred: P) -> usize {
+        let mut p = left + self.offset;
+        let mut value = self.e;
+        loop {
+            if p & 1 != 0 {
+                if pred((self.combine)(value, self.v[p])) {
+                value = (self.combine)(value, self.v[p]);
+                    p += 1;
+                } else {
+                    break;
                 }
             }
-            p - self.offset
+            p >>= 1;
         }
+        while p < self.offset {
+            p <<= 1;
+            if pred((self.combine)(value, self.v[p])) {
+                value = (self.combine)(value, self.v[p]);
+                p |= 1;
+            }
+        }
+        p - self.offset
     }
 }
 ```

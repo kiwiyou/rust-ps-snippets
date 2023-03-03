@@ -147,9 +147,9 @@
 
 impl Rng {
     fn split_mix(v: u64) -&gt; u64 {
-        let mut z = v + 0x9e3779b97f4a7c15;
-        z = (z ^ (z &gt;&gt; 30)) * 0xbf58476d1ce4e5b9;
-        z = (z ^ (z &gt;&gt; 27)) * 0x94d049bb133111eb;
+        let mut z = v.wrapping_add(0x9e3779b97f4a7c15);
+        z = (z ^ (z &gt;&gt; 30)).wrapping_mul(0xbf58476d1ce4e5b9);
+        z = (z ^ (z &gt;&gt; 27)).wrapping_mul(0x94d049bb133111eb);
         z ^ (z &gt;&gt; 31)
     }
     fn new() -&gt; Self {

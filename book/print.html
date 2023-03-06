@@ -1203,41 +1203,43 @@ such that edges with the same starting vertex are connected like a linked list.<
 <li><code>edge</code> stores previous edge indices.</li>
 <li><code>head</code> stores indices of edge list heads (or <code>u32::MAX</code> if none).</li>
 </ul>
-<pre><code class="language-rust noplayground">struct Graph&lt;T&gt; {
+<pre><pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>struct Graph {
     head: Vec&lt;u32&gt;,
-    edge: Vec&lt;u32&gt;,
+    link: Vec&lt;(u32, u32)&gt;,
 }
 
-impl&lt;T&gt; Graph&lt;T&gt; {
-    fn with_capacity(v: usize, e: usize) -&gt; Self {
+impl Graph {
+    fn new(v: usize, e: usize) -&gt; Self {
         Self {
             head: vec![u32::MAX; v],
-            edge: Vec::with_capacity(e),
+            link: Vec::with_capacity(e),
         }
     }
-
-    fn connect(&amp;mut self, from: usize, to: usize, data: T) {
+    fn connect(&amp;mut self, from: usize, to: usize) {
         let prev = self.head[from];
-        self.head[from] = self.edge.len() as u32;
-        self.edge.push(prev);
+        self.head[from] = self.link.len() as u32;
+        self.link.push((prev, to as u32));
     }
-
-    fn neighbor(&amp;self, from: usize) -&gt; Neighbor&lt;T&gt; {
-        Neighbor(self, self.head[from])
+    fn neighbor(&amp;self, u: usize) -&gt; Neighbor {
+        Neighbor(self, u as u32)
     }
 }
 
-struct Neighbor&lt;'g, T&gt;(&amp;'g Graph&lt;T&gt;, u32);
+struct Neighbor&lt;'a&gt;(&amp;'a Graph, u32);
 
-impl&lt;'g, T&gt; Iterator for Neighbor&lt;'g, T&gt; {
-    type Item = usize;
-
+impl&lt;'a&gt; Iterator for Neighbor&lt;'a&gt; {
+    // (edge index, endpoint)
+    type Item = (usize, usize);
     fn next(&amp;mut self) -&gt; Option&lt;Self::Item&gt; {
-        let &amp;next = self.0.edge.get(self.1 as usize)?;
+        let e = self.1;
+        let (next, endpoint) = *self.0.link.get(self.1 as usize)?;
         self.1 = next;
-        Some(self.1)
+        Some((e as usize, endpoint as usize))
     }
-}</code></pre>
+}
+<span class="boring">}</span></code></pre></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="kmp"><a class="header" href="#kmp">KMP</a></h1>
 <pre><code class="language-rust noplayground">
 struct Kmp&lt;'a, I, T&gt; {

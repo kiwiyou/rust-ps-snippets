@@ -23,6 +23,7 @@
 # Data Structures
 
 - [Segment Tree](segment-tree.md)
+- [Splay Tree](splay-tree.md)
 
 # Graphs
 

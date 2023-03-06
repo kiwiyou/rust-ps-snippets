@@ -28,6 +28,7 @@
 # Graphs
 
 - [Adjacency Array](adjacency-array.md)
+- [Heavy-Light Decomposition](hld.md)
 
 # Strings
 

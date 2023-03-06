@@ -3,6 +3,8 @@
 Top-down Splay Tree, supports lazy operations.
 
 ```rust
+use std::cmp::Ordering::*;
+
 trait SplayOp {
     type T;
     fn pull(_s: &mut Splay<Self>) {}
@@ -24,20 +26,22 @@ impl<Op: SplayOp> Splay<Op> {
         })
     }
     fn pull(&mut self) {
-        Op::pull(self);
         let l = self.c[0].as_ref().map_or(0, |c| c.k);
         let r = self.c[1].as_ref().map_or(0, |c| c.k);
         self.k = l + r + 1;
+        Op::pull(self);
     }
     fn push(&mut self) {
         Op::push(self);
     }
     fn split(&mut self, side: usize) -> Option<Box<Self>> {
+        self.push();
         let c = self.c[side].take();
         self.pull();
         c
     }
     fn join(&mut self, side: usize, tree: Option<Box<Self>>) {
+        self.push();
         assert!(self.c[side].is_none());
         self.c[side] = tree;
         self.pull();
@@ -89,6 +93,7 @@ impl<Op: SplayOp> Splay<Op> {
                 break;
             }
         }
+        current.push();
         let [mut left, mut right] = current.c;
         let [ltree, rtree] = tree;
         for mut l in ltree.into_iter().rev() {

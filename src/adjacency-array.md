@@ -7,40 +7,39 @@ such that edges with the same starting vertex are connected like a linked list.
 - `edge` stores previous edge indices.
 - `head` stores indices of edge list heads (or `u32::MAX` if none).
 
-```rust,noplayground
-struct Graph<T> {
+```rust
+struct Graph {
     head: Vec<u32>,
-    edge: Vec<u32>,
+    link: Vec<(u32, u32)>,
 }
 
-impl<T> Graph<T> {
-    fn with_capacity(v: usize, e: usize) -> Self {
+impl Graph {
+    fn new(v: usize, e: usize) -> Self {
         Self {
             head: vec![u32::MAX; v],
-            edge: Vec::with_capacity(e),
+            link: Vec::with_capacity(e),
         }
     }
-
-    fn connect(&mut self, from: usize, to: usize, data: T) {
+    fn connect(&mut self, from: usize, to: usize) {
         let prev = self.head[from];
-        self.head[from] = self.edge.len() as u32;
-        self.edge.push(prev);
+        self.head[from] = self.link.len() as u32;
+        self.link.push((prev, to as u32));
     }
-
-    fn neighbor(&self, from: usize) -> Neighbor<T> {
-        Neighbor(self, self.head[from])
+    fn neighbor(&self, u: usize) -> Neighbor {
+        Neighbor(self, u as u32)
     }
 }
 
-struct Neighbor<'g, T>(&'g Graph<T>, u32);
+struct Neighbor<'a>(&'a Graph, u32);
 
-impl<'g, T> Iterator for Neighbor<'g, T> {
-    type Item = usize;
-
+impl<'a> Iterator for Neighbor<'a> {
+    // (edge index, endpoint)
+    type Item = (usize, usize);
     fn next(&mut self) -> Option<Self::Item> {
-        let &next = self.0.edge.get(self.1 as usize)?;
+        let e = self.1;
+        let (next, endpoint) = *self.0.link.get(self.1 as usize)?;
         self.1 = next;
-        Some(self.1)
+        Some((e as usize, endpoint as usize))
     }
 }
 ```

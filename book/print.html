@@ -1086,7 +1086,9 @@ where
 <p>Top-down Splay Tree, supports lazy operations.</p>
 <pre><pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>trait SplayOp {
+</span>use std::cmp::Ordering::*;
+
+trait SplayOp {
     type T;
     fn pull(_s: &amp;mut Splay&lt;Self&gt;) {}
     fn push(_s: &amp;mut Splay&lt;Self&gt;) {}
@@ -1107,20 +1109,22 @@ impl&lt;Op: SplayOp&gt; Splay&lt;Op&gt; {
         })
     }
     fn pull(&amp;mut self) {
-        Op::pull(self);
         let l = self.c[0].as_ref().map_or(0, |c| c.k);
         let r = self.c[1].as_ref().map_or(0, |c| c.k);
         self.k = l + r + 1;
+        Op::pull(self);
     }
     fn push(&amp;mut self) {
         Op::push(self);
     }
     fn split(&amp;mut self, side: usize) -&gt; Option&lt;Box&lt;Self&gt;&gt; {
+        self.push();
         let c = self.c[side].take();
         self.pull();
         c
     }
     fn join(&amp;mut self, side: usize, tree: Option&lt;Box&lt;Self&gt;&gt;) {
+        self.push();
         assert!(self.c[side].is_none());
         self.c[side] = tree;
         self.pull();
@@ -1172,6 +1176,7 @@ impl&lt;Op: SplayOp&gt; Splay&lt;Op&gt; {
                 break;
             }
         }
+        current.push();
         let [mut left, mut right] = current.c;
         let [ltree, rtree] = tree;
         for mut l in ltree.into_iter().rev() {

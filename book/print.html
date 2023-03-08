@@ -178,6 +178,18 @@ macro_rules! println {
 macro_rules! print {
     ($($t:tt)*) =&gt; { unsafe { write!(STDOUT.as_mut().unwrap_unchecked(), $($t)*).unwrap_unchecked() } };
 }
+#[macro_export]
+macro_rules! flush {
+    () =&gt; {
+        unsafe {
+            STDOUT
+                .as_mut()
+                .unwrap_unchecked()
+                .flush()
+                .unwrap_unchecked()
+        }
+    };
+}
 
 #[macro_export]
 macro_rules! scanf {
@@ -232,7 +244,8 @@ extern &quot;C&quot; {
     fn fscanf(file: *mut usize, fmt: *const u8, ...) -&gt; i32;
     fn _exit(code: i32) -&gt; !;
     static stdin: *mut usize;
-}</code></pre>
+}
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="matrix"><a class="header" href="#matrix">Matrix</a></h1>
 <pre><code class="language-rust noplayground">struct Matrix&lt;T&gt;(Vec&lt;T&gt;, usize);
 

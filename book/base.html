@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Heavy-Light Decomposition - Rust PS Snippets</title>
+        <title>Base Template - Rust PS Snippets</title>
 
 
         <!-- Custom HTML head -->
@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><a href="base.html">Base Template</a></li><li class="chapter-item expanded affix "><li class="part-title">Utility</li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">1.</strong> Matrix</a></li><li class="chapter-item expanded "><a href="twosat.html"><strong aria-hidden="true">2.</strong> 2-SAT</a></li><li class="chapter-item expanded "><a href="prng.html"><strong aria-hidden="true">3.</strong> Pseudo Random Number Generator</a></li><li class="chapter-item expanded "><a href="bigint.html"><strong aria-hidden="true">4.</strong> Arbitrary Precision Integer</a></li><li class="chapter-item expanded affix "><li class="part-title">Math</li><li class="chapter-item expanded "><a href="gcd.html"><strong aria-hidden="true">5.</strong> GCD</a></li><li class="chapter-item expanded "><a href="rec.html"><strong aria-hidden="true">6.</strong> Linear Recurrence (Constant Coefficient)</a></li><li class="chapter-item expanded "><a href="cdiv.html"><strong aria-hidden="true">7.</strong> Constant Division / Modulo</a></li><li class="chapter-item expanded "><a href="ntt.html"><strong aria-hidden="true">8.</strong> Number Theoretic Transform</a></li><li class="chapter-item expanded affix "><li class="part-title">Geometry</li><li class="chapter-item expanded "><a href="convex-hull.html"><strong aria-hidden="true">9.</strong> Convex Hull</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">10.</strong> Segment Tree</a></li><li class="chapter-item expanded "><a href="splay-tree.html"><strong aria-hidden="true">11.</strong> Splay Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">12.</strong> Adjacency Array</a></li><li class="chapter-item expanded "><a href="hld.html" class="active"><strong aria-hidden="true">13.</strong> Heavy-Light Decomposition</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">14.</strong> KMP</a></li><li class="chapter-item expanded "><a href="regex.html"><strong aria-hidden="true">15.</strong> Regex</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><a href="base.html" class="active">Base Template</a></li><li class="chapter-item expanded affix "><li class="part-title">Utility</li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">1.</strong> Matrix</a></li><li class="chapter-item expanded "><a href="twosat.html"><strong aria-hidden="true">2.</strong> 2-SAT</a></li><li class="chapter-item expanded "><a href="prng.html"><strong aria-hidden="true">3.</strong> Pseudo Random Number Generator</a></li><li class="chapter-item expanded "><a href="bigint.html"><strong aria-hidden="true">4.</strong> Arbitrary Precision Integer</a></li><li class="chapter-item expanded affix "><li class="part-title">Math</li><li class="chapter-item expanded "><a href="gcd.html"><strong aria-hidden="true">5.</strong> GCD</a></li><li class="chapter-item expanded "><a href="rec.html"><strong aria-hidden="true">6.</strong> Linear Recurrence (Constant Coefficient)</a></li><li class="chapter-item expanded "><a href="cdiv.html"><strong aria-hidden="true">7.</strong> Constant Division / Modulo</a></li><li class="chapter-item expanded "><a href="ntt.html"><strong aria-hidden="true">8.</strong> Number Theoretic Transform</a></li><li class="chapter-item expanded affix "><li class="part-title">Geometry</li><li class="chapter-item expanded "><a href="convex-hull.html"><strong aria-hidden="true">9.</strong> Convex Hull</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">10.</strong> Segment Tree</a></li><li class="chapter-item expanded "><a href="splay-tree.html"><strong aria-hidden="true">11.</strong> Splay Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">12.</strong> Adjacency Array</a></li><li class="chapter-item expanded "><a href="hld.html"><strong aria-hidden="true">13.</strong> Heavy-Light Decomposition</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">14.</strong> KMP</a></li><li class="chapter-item expanded "><a href="regex.html"><strong aria-hidden="true">15.</strong> Regex</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -142,132 +142,102 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="heavy-light-decomposition"><a class="header" href="#heavy-light-decomposition">Heavy-Light Decomposition</a></h1>
-<p>Path traversing on heavy-light decomposition can be elegantly
-represented with Rust Iterator.</p>
-<pre><pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>struct Hld {
-    size: Vec&lt;u32&gt;,
-    parent: Vec&lt;u32&gt;,
-    depth: Vec&lt;u32&gt;,
-    chain: Vec&lt;u32&gt;,
-    index: Vec&lt;u32&gt;,
+                        <h1 id="base-template"><a class="header" href="#base-template">Base Template</a></h1>
+<p>You can use scanf. Not the best API, but I think it fits best for PS area.</p>
+<pre><code class="language-rust noplayground">fn solve() {
+    scanf!(&quot;%d%d&quot;, a: i32, b: i32);
+    println!(&quot;{}&quot;, a + b);
 }
 
-impl Hld {
-    fn make(g: &amp;mut Graph, root: usize) -&gt; Self {
-        let v = g.head.len();
-        let mut size = vec![1; v];
-        let mut parent = (0..v as u32).collect::&lt;Vec&lt;_&gt;&gt;();
-        let mut depth = vec![0; v];
-        let mut dfs = vec![(g.head[root], root as u32, 0)];
-        let mut d = 0;
-        while let Some((e, u, _)) = dfs.last_mut() {
-            if let Some(&amp;(next, v)) = g.link.get(*e as usize) {
-                if v == parent[*e as usize] {
-                    *e = next;
-                } else {
-                    parent[v as usize] = *u;
-                    d += 1;
-                    depth[v as usize] = d;
-                    dfs.push((g.head[v as usize], v, 0));
-                }
-            } else {
-                let (ve, v, _) = dfs.pop().unwrap();
-                if let Some((e, u, max)) = dfs.last_mut() {
-                    d -= 1;
-                    size[*u as usize] += size[v as usize];
-                    if size[v as usize] &gt; *max {
-                        *max = size[v as usize];
-                        let first = g.head[*u as usize] as usize;
-                        (g.link[first].1, g.link[ve as usize].1) =
-                            (g.link[ve as usize].1, g.link[first].1);
-                    }
-                    *e = g.link[*e as usize].0;
-                }
-            }
-        }
-        let mut chain = vec![0; v];
-        let mut index = vec![u32::MAX; v];
-        let mut heavy_dfs = vec![(g.head[root], root as u32)];
-        let mut dfs = vec![];
-        let mut i = 0;
-        index[root as usize] = i;
-        i += 1;
-        loop {
-            if let Some((e, r)) = heavy_dfs.pop() {
-                if let Some(&amp;(next, v)) = g.link.get(e as usize) {
-                    chain[v as usize] = r;
-                    index[v as usize] = i;
-                    i += 1;
-                    heavy_dfs.push((g.head[v as usize], r));
-                    dfs.push(next);
-                }
-            } else if let Some(e) = dfs.last_mut() {
-                if let Some(&amp;(next, v)) = g.link.get(*e as usize) {
-                    *e = next;
-                    if index[v as usize] == u32::MAX {
-                        chain[v as usize] = v;
-                        index[v as usize] = i;
-                        i += 1;
-                        heavy_dfs.push((g.head[v as usize], v));
-                    }
-                } else {
-                    dfs.pop();
-                }
-            } else {
-                break;
-            }
-        }
-        Self {
-            size,
-            parent,
-            depth,
-            chain,
-            index,
-        }
+fn main() {
+    unsafe {
+        *stdin |= 0x8000;
+        STDOUT = Some(BufWriter::with_capacity(1 &lt;&lt; 17, File::from_raw_fd(1)));
     }
-    fn path(&amp;self, u: usize, v: usize) -&gt; HldPath {
-        HldPath(self, Some((u, v)))
+    solve();
+    unsafe {
+        STDOUT.as_mut().unwrap_unchecked().flush().ok();
+        _exit(0);
     }
 }
 
-struct HldPath&lt;'a&gt;(&amp;'a Hld, Option&lt;(usize, usize)&gt;);
+use std::{fs::File, io::*, os::unix::io::FromRawFd};
 
-impl&lt;'a&gt; Iterator for HldPath&lt;'a&gt; {
-    // (upper (thus lower index) node, lower node)
-    type Item = (usize, usize);
-    fn next(&amp;mut self) -&gt; Option&lt;Self::Item&gt; {
-        let (mut u, mut v) = self.1?;
-        if self.0.chain[u] == self.0.chain[v] {
-            if self.0.depth[u] &gt; self.0.depth[v] {
-                (u, v) = (v, u);
-            }
-            self.1 = None;
-            Some((u, v))
-        } else {
-            let ru = self.0.chain[u] as usize;
-            let mut rv = self.0.chain[v] as usize;
-            if self.0.depth[ru] &gt; self.0.depth[rv] {
-                (u, v, rv) = (v, u, ru);
-            }
-            self.1 = Some((u, self.0.parent[rv] as usize));
-            Some((rv, v))
-        }
-    }
+static mut STDOUT: Option&lt;BufWriter&lt;File&gt;&gt; = None;
+
+#[macro_export]
+macro_rules! println {
+    ($($t:tt)*) =&gt; { unsafe { writeln!(STDOUT.as_mut().unwrap_unchecked(), $($t)*).unwrap_unchecked() } };
 }
-<span class="boring">}</span></code></pre></pre>
+#[macro_export]
+macro_rules! print {
+    ($($t:tt)*) =&gt; { unsafe { write!(STDOUT.as_mut().unwrap_unchecked(), $($t)*).unwrap_unchecked() } };
+}
+
+#[macro_export]
+macro_rules! scanf {
+    ($fmt:literal $(, $($t:tt)+)?) =&gt; {
+        scanf!(@def $($($t)+)?);
+        scanf!(@call $($($t)+)?, $fmt);
+        scanf!(@bind $($($t)+)?);
+    };
+    (@def) =&gt; {};
+    (@def $(mut)? $name:ident: [u8; $size:expr] $(, $($t:tt)+)?) =&gt; {
+        let mut $name = vec![0u8; $size + 1];
+        scanf!(@def $($($t)+)?);
+    };
+    (@def $(mut)? $name:ident: $ty:ty $(, $($t:tt)+)?) =&gt; {
+        let mut $name = std::mem::MaybeUninit::&lt;$ty&gt;::uninit();
+        scanf!(@def $($($t)+)?);
+    };
+    ($($names:ident),* @call $fmt:literal) =&gt; {
+        unsafe {
+            fscanf(stdin, concat!($fmt, &quot;\0&quot;).as_ptr(), $($names.as_mut_ptr()),*);
+        };
+    };
+    ($($names:ident),* @call $(mut)? $name:ident: [u8; $size:expr] $(, $($t:tt)+)?) =&gt; {
+        scanf!($($names,)* $name @call $($($t)+)?);
+    };
+    ($($names:ident),* @call $(mut)? $name:ident: $ty:ty $(, $($t:tt)+)?) =&gt; {
+        scanf!($($names,)* $name @call $($($t)+)?);
+    };
+    (@bind) =&gt; {};
+    (@bind $name:ident: [u8; $size:expr] $(, $($t:tt)+)?) =&gt; {
+        $name.pop();
+        let $name = unsafe { String::from_utf8_unchecked($name) };
+        scanf!(@bind $($($t)+)?);
+    };
+    (@bind mut $name:ident: [u8; $size:expr] $(, $($t:tt)+)?) =&gt; {
+        $name.pop();
+        let mut $name = unsafe { String::from_utf8_unchecked($name) };
+        scanf!(@bind $($($t)+)?);
+    };
+    (@bind $name:ident: $ty:ty $(, $($t:tt)+)?) =&gt; {
+        let $name = unsafe { $name.assume_init() };
+        scanf!(@bind $($($t)+)?);
+    };
+    (@bind mut $name:ident: $ty:ty $(, $($t:tt)+)?) =&gt; {
+        let mut $name = unsafe { $name.assume_init() };
+        scanf!(@bind $($($t)+)?);
+    };
+}
+
+#[link(name = &quot;c&quot;)]
+extern &quot;C&quot; {
+    fn fscanf(file: *mut usize, fmt: *const u8, ...) -&gt; i32;
+    fn _exit(code: i32) -&gt; !;
+    static stdin: *mut usize;
+}</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="adjacency-array.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next" href="kmp.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="matrix.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -277,11 +247,11 @@ impl&lt;'a&gt; Iterator for HldPath&lt;'a&gt; {
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="adjacency-array.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next" href="kmp.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="matrix.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

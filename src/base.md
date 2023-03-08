@@ -32,6 +32,18 @@ macro_rules! println {
 macro_rules! print {
     ($($t:tt)*) => { unsafe { write!(STDOUT.as_mut().unwrap_unchecked(), $($t)*).unwrap_unchecked() } };
 }
+#[macro_export]
+macro_rules! flush {
+    () => {
+        unsafe {
+            STDOUT
+                .as_mut()
+                .unwrap_unchecked()
+                .flush()
+                .unwrap_unchecked()
+        }
+    };
+}
 
 #[macro_export]
 macro_rules! scanf {
@@ -87,4 +99,4 @@ extern "C" {
     fn _exit(code: i32) -> !;
     static stdin: *mut usize;
 }
-```
+

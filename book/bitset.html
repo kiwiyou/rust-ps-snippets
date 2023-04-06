@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Pseudo Random Number Generator - Rust PS Snippets</title>
+        <title>Bitset - Rust PS Snippets</title>
 
 
         <!-- Custom HTML head -->
@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><a href="base.html">Base Template</a></li><li class="chapter-item expanded affix "><li class="part-title">Utility</li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">1.</strong> Matrix</a></li><li class="chapter-item expanded "><a href="twosat.html"><strong aria-hidden="true">2.</strong> 2-SAT</a></li><li class="chapter-item expanded "><a href="prng.html" class="active"><strong aria-hidden="true">3.</strong> Pseudo Random Number Generator</a></li><li class="chapter-item expanded "><a href="bigint.html"><strong aria-hidden="true">4.</strong> Arbitrary Precision Integer</a></li><li class="chapter-item expanded "><a href="bitset.html"><strong aria-hidden="true">5.</strong> Bitset</a></li><li class="chapter-item expanded affix "><li class="part-title">Math</li><li class="chapter-item expanded "><a href="gcd.html"><strong aria-hidden="true">6.</strong> GCD</a></li><li class="chapter-item expanded "><a href="rec.html"><strong aria-hidden="true">7.</strong> Linear Recurrence (Constant Coefficient)</a></li><li class="chapter-item expanded "><a href="cdiv.html"><strong aria-hidden="true">8.</strong> Constant Division / Modulo</a></li><li class="chapter-item expanded "><a href="ntt.html"><strong aria-hidden="true">9.</strong> Number Theoretic Transform</a></li><li class="chapter-item expanded affix "><li class="part-title">Geometry</li><li class="chapter-item expanded "><a href="convex-hull.html"><strong aria-hidden="true">10.</strong> Convex Hull</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">11.</strong> Segment Tree</a></li><li class="chapter-item expanded "><a href="splay-tree.html"><strong aria-hidden="true">12.</strong> Splay Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">13.</strong> Adjacency Array</a></li><li class="chapter-item expanded "><a href="hld.html"><strong aria-hidden="true">14.</strong> Heavy-Light Decomposition</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">15.</strong> KMP</a></li><li class="chapter-item expanded "><a href="regex.html"><strong aria-hidden="true">16.</strong> Regex</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><a href="base.html">Base Template</a></li><li class="chapter-item expanded affix "><li class="part-title">Utility</li><li class="chapter-item expanded "><a href="matrix.html"><strong aria-hidden="true">1.</strong> Matrix</a></li><li class="chapter-item expanded "><a href="twosat.html"><strong aria-hidden="true">2.</strong> 2-SAT</a></li><li class="chapter-item expanded "><a href="prng.html"><strong aria-hidden="true">3.</strong> Pseudo Random Number Generator</a></li><li class="chapter-item expanded "><a href="bigint.html"><strong aria-hidden="true">4.</strong> Arbitrary Precision Integer</a></li><li class="chapter-item expanded "><a href="bitset.html" class="active"><strong aria-hidden="true">5.</strong> Bitset</a></li><li class="chapter-item expanded affix "><li class="part-title">Math</li><li class="chapter-item expanded "><a href="gcd.html"><strong aria-hidden="true">6.</strong> GCD</a></li><li class="chapter-item expanded "><a href="rec.html"><strong aria-hidden="true">7.</strong> Linear Recurrence (Constant Coefficient)</a></li><li class="chapter-item expanded "><a href="cdiv.html"><strong aria-hidden="true">8.</strong> Constant Division / Modulo</a></li><li class="chapter-item expanded "><a href="ntt.html"><strong aria-hidden="true">9.</strong> Number Theoretic Transform</a></li><li class="chapter-item expanded affix "><li class="part-title">Geometry</li><li class="chapter-item expanded "><a href="convex-hull.html"><strong aria-hidden="true">10.</strong> Convex Hull</a></li><li class="chapter-item expanded affix "><li class="part-title">Data Structures</li><li class="chapter-item expanded "><a href="segment-tree.html"><strong aria-hidden="true">11.</strong> Segment Tree</a></li><li class="chapter-item expanded "><a href="splay-tree.html"><strong aria-hidden="true">12.</strong> Splay Tree</a></li><li class="chapter-item expanded affix "><li class="part-title">Graphs</li><li class="chapter-item expanded "><a href="adjacency-array.html"><strong aria-hidden="true">13.</strong> Adjacency Array</a></li><li class="chapter-item expanded "><a href="hld.html"><strong aria-hidden="true">14.</strong> Heavy-Light Decomposition</a></li><li class="chapter-item expanded affix "><li class="part-title">Strings</li><li class="chapter-item expanded "><a href="kmp.html"><strong aria-hidden="true">15.</strong> KMP</a></li><li class="chapter-item expanded "><a href="regex.html"><strong aria-hidden="true">16.</strong> Regex</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -142,41 +142,118 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="pseudo-random-number-generator"><a class="header" href="#pseudo-random-number-generator">Pseudo Random Number Generator</a></h1>
-<p>Reference: https://github.com/BrutPitt/fastPRNG</p>
-<pre><code class="language-rust noplayground">struct Rng([u64; 4]);
+                        <h1 id="bitset"><a class="header" href="#bitset">Bitset</a></h1>
+<pre><code class="language-rust noplayground">struct Bitset(Vec&lt;std::arch::x86_64::__m256i&gt;, usize);
 
-impl Rng {
-    fn split_mix(v: u64) -&gt; u64 {
-        let mut z = v.wrapping_add(0x9e3779b97f4a7c15);
-        z = (z ^ (z &gt;&gt; 30)).wrapping_mul(0xbf58476d1ce4e5b9);
-        z = (z ^ (z &gt;&gt; 27)).wrapping_mul(0x94d049bb133111eb);
-        z ^ (z &gt;&gt; 31)
+impl Bitset {
+    #[target_feature(enable = &quot;avx2&quot;)]
+    unsafe fn new(n: usize) -&gt; Self {
+        use std::arch::x86_64::*;
+        let mut v = vec![];
+        v.resize_with((n + 255) / 256, || unsafe { _mm256_setzero_si256() });
+        Self(v, n)
     }
-    fn new() -&gt; Self {
-        let mut seed = 0;
-        // This is hardware RNG
-        unsafe { std::arch::x86_64::_rdrand64_step(&amp;mut seed) };
-        let mut prev = seed;
-        Self(std::array::from_fn(|_| {
-            prev = Self::split_mix(prev);
-            prev
-        }))
+    fn get(&amp;self, i: usize) -&gt; bool {
+        assert!(i &lt; self.1);
+        let b64 =
+            unsafe { std::slice::from_raw_parts(self.0.as_ptr() as *const u64, self.0.len() * 4) };
+        b64[i / 64] &amp; (1 &lt;&lt; (i % 64)) != 0
     }
-    fn next(&amp;mut self, n: u64) -&gt; u64 {
-        let [x, y, z, c] = &amp;mut self.0;
-        let t = x.wrapping_shl(58) + *c;
-        *c = *x &gt;&gt; 6;
-        *x = x.wrapping_add(t);
-        if *x &lt; t {
-            *c += 1;
+    fn set(&amp;mut self, i: usize, v: bool) {
+        assert!(i &lt; self.1);
+        let b64 = unsafe {
+            std::slice::from_raw_parts_mut(self.0.as_mut_ptr() as *mut u64, self.0.len() * 4)
+        };
+        if v {
+            b64[i / 64] |= 1 &lt;&lt; (i % 64);
+        } else {
+            b64[i / 64] &amp;= !(1 &lt;&lt; (i % 64));
         }
-        *z = z.wrapping_mul(6906969069).wrapping_add(1234567);
-        *y ^= y.wrapping_shl(13);
-        *y ^= *y &gt;&gt; 17;
-        *y ^= y.wrapping_shl(43);
-        let base = x.wrapping_add(*y).wrapping_add(*z);
-        ((base as u128 * n as u128) &gt;&gt; 64) as u64
+    }
+    fn flip(&amp;mut self, i: usize) {
+        assert!(i &lt; self.1);
+        let b64 = unsafe {
+            std::slice::from_raw_parts_mut(self.0.as_mut_ptr() as *mut u64, self.0.len() * 4)
+        };
+        b64[i / 64] ^= 1 &lt;&lt; (i % 64);
+    }
+    #[target_feature(enable = &quot;avx2&quot;)]
+    unsafe fn find_first_unset(&amp;self, mut begin: usize) -&gt; Option&lt;usize&gt; {
+        let b64 =
+            unsafe { std::slice::from_raw_parts(self.0.as_ptr() as *const u64, self.0.len() * 4) };
+        while begin % 64 != 0 &amp;&amp; begin &lt; self.1 {
+            if b64[begin / 64] &amp; (1 &lt;&lt; (begin % 64)) == 0 {
+                return (begin &lt; self.1).then_some(begin);
+            }
+            begin += 1;
+        }
+        while begin % 256 != 0 &amp;&amp; begin &lt; self.1 {
+            let offset = b64[begin / 64].trailing_ones() as usize;
+            begin += offset;
+            if offset != 64 {
+                return (begin &lt; self.1).then_some(begin);
+            }
+        }
+        let mut mask = 0;
+        if begin &lt; self.1 {
+            let i = begin / 256
+                + self.0[begin / 256..].iter().position(|p| {
+                    use std::arch::x86_64::*;
+                    let v256 = unsafe { _mm256_load_si256(p) };
+                    let zero = unsafe { _mm256_set1_epi8(-1) };
+                    let nonzero = unsafe { _mm256_cmpeq_epi8(zero, v256) };
+                    mask = unsafe { _mm256_movemask_epi8(nonzero) } as u32;
+                    mask != !0
+                })?;
+            let j = (0..32).position(|s| mask &amp; (1 &lt;&lt; s) == 0).unwrap();
+            let b8 = unsafe {
+                std::slice::from_raw_parts(self.0.as_ptr() as *const u8, self.0.len() * 32)
+            };
+            let k = b8[i * 32 + j].trailing_ones() as usize;
+            let begin = (i * 32 + j) * 8 + k;
+            (begin &lt; self.1).then_some(begin)
+        } else {
+            None
+        }
+    }
+    #[target_feature(enable = &quot;avx2&quot;)]
+    unsafe fn find_first_set(&amp;self, mut begin: usize) -&gt; Option&lt;usize&gt; {
+        let b64 =
+            unsafe { std::slice::from_raw_parts(self.0.as_ptr() as *const u64, self.0.len() * 4) };
+        while begin % 64 != 0 &amp;&amp; begin &lt; self.1 {
+            if b64[begin / 64] &amp; (1 &lt;&lt; (begin % 64)) != 0 {
+                return (begin &lt; self.1).then_some(begin);
+            }
+            begin += 1;
+        }
+        while begin % 256 != 0 &amp;&amp; begin &lt; self.1 {
+            let offset = b64[begin / 64].trailing_zeros() as usize;
+            begin += offset;
+            if offset != 64 {
+                return (begin &lt; self.1).then_some(begin);
+            }
+        }
+        let mut mask = 0;
+        if begin &lt; self.1 {
+            let i = begin / 256
+                + self.0[begin / 256..].iter().position(|p| {
+                    use std::arch::x86_64::*;
+                    let v256 = unsafe { _mm256_load_si256(p) };
+                    let zero = unsafe { _mm256_setzero_si256() };
+                    let nonzero = unsafe { _mm256_cmpeq_epi8(zero, v256) };
+                    mask = unsafe { _mm256_movemask_epi8(nonzero) } as u32;
+                    mask != !0
+                })?;
+            let j = (0..32).position(|s| mask &amp; (1 &lt;&lt; s) == 0).unwrap();
+            let b8 = unsafe {
+                std::slice::from_raw_parts(self.0.as_ptr() as *const u8, self.0.len() * 32)
+            };
+            let k = b8[i * 32 + j].trailing_zeros() as usize;
+            let begin = (i * 32 + j) * 8 + k;
+            (begin &lt; self.1).then_some(begin)
+        } else {
+            None
+        }
     }
 }</code></pre>
 
@@ -184,11 +261,11 @@ impl Rng {
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="twosat.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="bigint.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next" href="bigint.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="gcd.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -198,11 +275,11 @@ impl Rng {
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="twosat.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="bigint.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next" href="bigint.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="gcd.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

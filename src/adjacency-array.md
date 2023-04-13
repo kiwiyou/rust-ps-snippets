@@ -26,7 +26,7 @@ impl Graph {
         self.link.push((prev, to as u32));
     }
     fn neighbor(&self, u: usize) -> Neighbor {
-        Neighbor(self, u as u32)
+        Neighbor(self, self.head[u])
     }
 }
 

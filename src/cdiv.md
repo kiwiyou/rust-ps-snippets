@@ -100,4 +100,19 @@ impl ModU64 {
         self.0.wrapping_mul(a as u128) <= self.0.wrapping_sub(1)
     }
 }
+
+#[derive(Copy, Clone)]
+struct BarrettU32(u64, u32);
+
+impl BarrettU32 {
+    fn new(div: u32) -> Self {
+        Self(!0u64 / div as u64, div)
+    }
+    fn quot(&self, a: u64) -> u64 {
+        ((self.0 as u128 * a as u128) >> 64) as u64
+    }
+    fn rem(&self, a: u64) -> u32 {
+        (a - self.quot(a) * self.1 as u64) as u32
+    }
+}
 ```

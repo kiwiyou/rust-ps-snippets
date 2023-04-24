@@ -104,6 +104,27 @@ impl Reader {
         self.cur = unsafe { self.begin.add(add) };
         self.end = unsafe { self.begin.add(self.cap) };
     }
+    fn read_until(&mut self, delim: u8, buf: &mut String) -> usize {
+        #[target_feature(enable = "avx2,sse4.2")]
+        unsafe fn memchr(s: &[u8], delim: u8) -> Option<usize> {
+            s.iter().position(|&b| b == delim)
+        }
+        let mut total = 0;
+        loop {
+            let len = unsafe { self.end.offset_from(self.cur) } as usize;
+            let range = unsafe { std::slice::from_raw_parts(self.cur, len) };
+            if let Some(i) = unsafe { memchr(range, delim) } {
+                unsafe { buf.as_mut_vec() }.extend_from_slice(&range[..i]);
+                self.cur = unsafe { self.cur.add(i + 1) };
+                break total + i;
+            } else {
+                unsafe { buf.as_mut_vec() }.extend_from_slice(&range);
+                self.cur = self.end;
+                self.try_refill(1);
+                total += len;
+            }
+        }
+    }
     fn read_i32(&mut self) -> i32 {
         let sign = unsafe { self.cur.read() } == b'-';
         (if sign {

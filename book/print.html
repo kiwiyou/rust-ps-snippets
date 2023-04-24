@@ -1031,16 +1031,11 @@ impl Reader {
         let m = !c &amp; 0x1010101010101010;
         let len = m.trailing_zeros() &gt;&gt; 3;
         c &lt;&lt;= (8 - len) &lt;&lt; 3;
-        c = ((c &amp; 0x0F0F0F0F0F0F0F0F) * 2561) &gt;&gt; 8;
-        c = ((c &amp; 0x00FF00FF00FF00FF) * 6553601) &gt;&gt; 16;
-        c = ((c &amp; 0x0000FFFF0000FFFF) * 42949672960001) &gt;&gt; 32;
+        c = (c &amp; 0x0F0F0F0F0F0F0F0F).wrapping_mul(2561) &gt;&gt; 8;
+        c = (c &amp; 0x00FF00FF00FF00FF).wrapping_mul(6553601) &gt;&gt; 16;
+        c = (c &amp; 0x0000FFFF0000FFFF).wrapping_mul(42949672960001) &gt;&gt; 32;
         self.cur = unsafe { self.cur.add(len as usize) };
         if len == 8 {
-            if unsafe { self.cur.read() } &amp; 0x10 != 0 {
-                c *= 10;
-                c += (unsafe { self.cur.read() } - b'0') as u64;
-                self.cur = unsafe { self.cur.add(1) };
-            }
             if unsafe { self.cur.read() } &amp; 0x10 != 0 {
                 c *= 10;
                 c += (unsafe { self.cur.read() } - b'0') as u64;
@@ -1056,42 +1051,43 @@ impl Reader {
         c as u32
     }
     fn u64(&amp;mut self) -&gt; u64 {
-        #[target_feature(enable = &quot;avx2,sse4.2&quot;)]
-        unsafe fn parse_u64(p: *const u8) -&gt; (i32, u64) {
-            use std::arch::x86_64::*;
-            let load = _mm_loadu_si128(p.cast());
-            let digits = _mm_set_epi8(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 57, 48);
-            let len = _mm_cmpistri::&lt;
-                { _SIDD_UBYTE_OPS | _SIDD_CMP_RANGES | _SIDD_NEGATIVE_POLARITY },
-            &gt;(digits, load);
-            let asciiz = _mm_set1_epi8(48);
-            let idx = _mm_set_epi8(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0);
-            let len_b = _mm_set1_epi8(len as i8 - 1);
-            let shuffle = _mm_sub_epi8(len_b, idx);
-            let numeric = _mm_sub_epi8(load, asciiz);
-            let shuffled = _mm_shuffle_epi8(numeric, shuffle);
-            let multwo = _mm_set1_epi16(10 &lt;&lt; 8 | 1);
-            let two = _mm_maddubs_epi16(shuffled, multwo);
-            let mulfour = _mm_set1_epi32(100 &lt;&lt; 16 | 1);
-            let four = _mm_madd_epi16(two, mulfour);
-            let packed = _mm_packus_epi32(four, four);
-            let muleight = _mm_set1_epi32(10000 &lt;&lt; 16 | 1);
-            let eight = _mm_madd_epi16(packed, muleight);
-            let x: [u32; 4] = std::mem::transmute(eight);
-            (len, x[1] as u64 * 100000000 + x[0] as u64)
-        }
-        let (len, mut c) = unsafe { parse_u64(self.cur) };
+        let mut c = unsafe { self.cur.cast::&lt;u64&gt;().read_unaligned() };
+        let m = !c &amp; 0x1010101010101010;
+        let len = m.trailing_zeros() &gt;&gt; 3;
+        c &lt;&lt;= (8 - len) &lt;&lt; 3;
+        c = (c &amp; 0x0F0F0F0F0F0F0F0F).wrapping_mul(2561) &gt;&gt; 8;
+        c = (c &amp; 0x00FF00FF00FF00FF).wrapping_mul(6553601) &gt;&gt; 16;
+        c = (c &amp; 0x0000FFFF0000FFFF).wrapping_mul(42949672960001) &gt;&gt; 32;
         self.cur = unsafe { self.cur.add(len as usize) };
-        if len == 16 {
-            if unsafe { self.cur.read() } &amp; 0x10 != 0 {
+        if len == 8 &amp;&amp; unsafe { self.cur.read() } &amp; 16 != 0 {
+            let mut d = unsafe { self.cur.cast::&lt;u64&gt;().read_unaligned() };
+            let m = !d &amp; 0x1010101010101010;
+            let len = m.trailing_zeros() &gt;&gt; 3;
+            for _ in 0..len {
                 c *= 10;
-                c += (unsafe { self.cur.read() } - b'0') as u64;
-                self.cur = unsafe { self.cur.add(1) };
             }
-            if unsafe { self.cur.read() } &amp; 0x10 != 0 {
-                c *= 10;
-                c += (unsafe { self.cur.read() } - b'0') as u64;
-                self.cur = unsafe { self.cur.add(1) };
+            d &lt;&lt;= (8 - len) &lt;&lt; 3;
+            d = (d &amp; 0x0F0F0F0F0F0F0F0F).wrapping_mul(2561) &gt;&gt; 8;
+            d = (d &amp; 0x00FF00FF00FF00FF).wrapping_mul(6553601) &gt;&gt; 16;
+            d = (d &amp; 0x0000FFFF0000FFFF).wrapping_mul(42949672960001) &gt;&gt; 32;
+            c += d;
+            self.cur = unsafe { self.cur.add(len as usize) };
+            if len == 8 {
+                if unsafe { self.cur.read() } &amp; 0x10 != 0 {
+                    c *= 10;
+                    c += (unsafe { self.cur.read() } - b'0') as u64;
+                    self.cur = unsafe { self.cur.add(1) };
+                }
+                if unsafe { self.cur.read() } &amp; 0x10 != 0 {
+                    c *= 10;
+                    c += (unsafe { self.cur.read() } - b'0') as u64;
+                    self.cur = unsafe { self.cur.add(1) };
+                }
+                if unsafe { self.cur.read() } &amp; 0x10 != 0 {
+                    c *= 10;
+                    c += (unsafe { self.cur.read() } - b'0') as u64;
+                    self.cur = unsafe { self.cur.add(1) };
+                }
             }
         }
         self.cur = unsafe { self.cur.add(1) };

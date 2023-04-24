@@ -119,7 +119,7 @@ impl Reader {
         self.cur = unsafe { self.begin.add(add) };
         self.end = unsafe { self.begin.add(self.cap) };
     }
-    fn read_until(&mut self, delim: u8, buf: &mut String) -> usize {
+    fn until(&mut self, delim: u8, buf: &mut String) -> usize {
         #[target_feature(enable = "avx2,sse4.2")]
         unsafe fn memchr(s: &[u8], delim: u8) -> Option<usize> {
             s.iter().position(|&b| b == delim)
@@ -140,25 +140,25 @@ impl Reader {
             }
         }
     }
-    fn read_i32(&mut self) -> i32 {
+    fn i32(&mut self) -> i32 {
         let sign = unsafe { self.cur.read() } == b'-';
         (if sign {
             self.cur = unsafe { self.cur.add(1) };
-            self.read_u32().wrapping_neg()
+            self.u32().wrapping_neg()
         } else {
-            self.read_u32()
+            self.u32()
         }) as i32
     }
-    fn read_i64(&mut self) -> i64 {
+    fn i64(&mut self) -> i64 {
         let sign = unsafe { self.cur.read() } == b'-';
         (if sign {
             self.cur = unsafe { self.cur.add(1) };
-            self.read_u64().wrapping_neg()
+            self.u64().wrapping_neg()
         } else {
-            self.read_u64()
+            self.u64()
         }) as i64
     }
-    fn read_u32(&mut self) -> u32 {
+    fn u32(&mut self) -> u32 {
         let mut c = unsafe { self.cur.cast::<u64>().read_unaligned() };
         let m = !c & 0x1010101010101010;
         let len = m.trailing_zeros() >> 3;
@@ -187,7 +187,7 @@ impl Reader {
         self.cur = unsafe { self.cur.add(1) };
         c as u32
     }
-    fn read_u64(&mut self) -> u64 {
+    fn u64(&mut self) -> u64 {
         #[target_feature(enable = "avx2,sse4.2")]
         unsafe fn parse_u64(p: *const u8) -> (i32, u64) {
             use std::arch::x86_64::*;
@@ -362,5 +362,4 @@ impl Writer {
         self.off += len;
     }
 }
-
 ```

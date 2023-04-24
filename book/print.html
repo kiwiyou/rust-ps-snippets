@@ -996,6 +996,7 @@ impl Reader {
     fn read_i32(&amp;mut self) -&gt; i32 {
         let sign = unsafe { self.cur.read() } == b'-';
         (if sign {
+            self.cur = unsafe { self.cur.add(1) };
             self.read_u32().wrapping_neg()
         } else {
             self.read_u32()
@@ -1004,6 +1005,7 @@ impl Reader {
     fn read_i64(&amp;mut self) -&gt; i64 {
         let sign = unsafe { self.cur.read() } == b'-';
         (if sign {
+            self.cur = unsafe { self.cur.add(1) };
             self.read_u64().wrapping_neg()
         } else {
             self.read_u64()

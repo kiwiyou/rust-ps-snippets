@@ -333,7 +333,7 @@ impl Writer {
                 hi /= 10;
                 hi128.0[hioff] = (hi % 10) as u8 + b'0';
             }
-            if hi >= 100 {
+            if hi >= 10 {
                 hioff -= 1;
                 hi /= 10;
                 hi128.0[hioff] = hi as u8 + b'0';
@@ -347,7 +347,7 @@ impl Writer {
             looff = 8;
         } else {
             self.try_flush(8);
-            hioff = 0;
+            hioff = 16;
             looff = unsafe { cvt8(&mut lo128, n as u32) };
         }
         let len = 16 - hioff;

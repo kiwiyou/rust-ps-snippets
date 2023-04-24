@@ -987,7 +987,7 @@ impl Reader {
         self.cur = unsafe { self.begin.add(add) };
         self.end = unsafe { self.begin.add(self.cap) };
     }
-    fn read_until(&amp;mut self, delim: u8, buf: &amp;mut String) -&gt; usize {
+    fn until(&amp;mut self, delim: u8, buf: &amp;mut String) -&gt; usize {
         #[target_feature(enable = &quot;avx2,sse4.2&quot;)]
         unsafe fn memchr(s: &amp;[u8], delim: u8) -&gt; Option&lt;usize&gt; {
             s.iter().position(|&amp;b| b == delim)
@@ -1008,25 +1008,25 @@ impl Reader {
             }
         }
     }
-    fn read_i32(&amp;mut self) -&gt; i32 {
+    fn i32(&amp;mut self) -&gt; i32 {
         let sign = unsafe { self.cur.read() } == b'-';
         (if sign {
             self.cur = unsafe { self.cur.add(1) };
-            self.read_u32().wrapping_neg()
+            self.u32().wrapping_neg()
         } else {
-            self.read_u32()
+            self.u32()
         }) as i32
     }
-    fn read_i64(&amp;mut self) -&gt; i64 {
+    fn i64(&amp;mut self) -&gt; i64 {
         let sign = unsafe { self.cur.read() } == b'-';
         (if sign {
             self.cur = unsafe { self.cur.add(1) };
-            self.read_u64().wrapping_neg()
+            self.u64().wrapping_neg()
         } else {
-            self.read_u64()
+            self.u64()
         }) as i64
     }
-    fn read_u32(&amp;mut self) -&gt; u32 {
+    fn u32(&amp;mut self) -&gt; u32 {
         let mut c = unsafe { self.cur.cast::&lt;u64&gt;().read_unaligned() };
         let m = !c &amp; 0x1010101010101010;
         let len = m.trailing_zeros() &gt;&gt; 3;
@@ -1055,7 +1055,7 @@ impl Reader {
         self.cur = unsafe { self.cur.add(1) };
         c as u32
     }
-    fn read_u64(&amp;mut self) -&gt; u64 {
+    fn u64(&amp;mut self) -&gt; u64 {
         #[target_feature(enable = &quot;avx2,sse4.2&quot;)]
         unsafe fn parse_u64(p: *const u8) -&gt; (i32, u64) {
             use std::arch::x86_64::*;
@@ -1229,8 +1229,7 @@ impl Writer {
         self.buf[self.off..self.off + len].copy_from_slice(&amp;lo128.0[looff..]);
         self.off += len;
     }
-}
-</code></pre>
+}</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="gcd"><a class="header" href="#gcd">GCD</a></h1>
 <pre><code class="language-rust noplayground">fn gcd(a: u64, b: u64) -&gt; u64 {
     if a == 0 || b == 0 {

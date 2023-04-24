@@ -1,7 +1,6 @@
 # Summary
 
 [Introduction](README.md)
-[Base Template](base.md)
 
 # Utility
 
@@ -10,6 +9,7 @@
 - [Pseudo Random Number Generator](prng.md)
 - [Arbitrary Precision Integer](bigint.md)
 - [Bitset](bitset.md)
+- [Fast IO](fastio.md)
 
 # Math
 

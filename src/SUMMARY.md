@@ -9,7 +9,7 @@
 - [Pseudo Random Number Generator](prng.md)
 - [Arbitrary Precision Integer](bigint.md)
 - [Bitset](bitset.md)
-- [Fast IO](fastio.md)
+- [Fast IO](io.md)
 
 # Math
 

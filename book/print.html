@@ -876,64 +876,6 @@ impl Bitset {
     goff: usize,
     cap: usize,
 }
-
-struct Writer {
-    buf: Vec&lt;u8&gt;,
-    off: usize,
-}
-
-impl Drop for Writer {
-    fn drop(&amp;mut self) {
-        self.flush();
-    }
-}
-
-#[repr(align(16))]
-struct B128([u8; 16]);
-#[target_feature(enable = &quot;avx2&quot;)]
-unsafe fn cvt8(out: &amp;mut B128, n: u32) -&gt; usize {
-    use std::arch::x86_64::*;
-    let x = _mm_cvtsi32_si128(n as i32);
-    let div_10000 = _mm_set1_epi32(0xd1b71759u32 as i32);
-    let mul_10000_merge = _mm_set1_epi32(55536);
-    let div_var = _mm_setr_epi16(
-        8389,
-        5243,
-        13108,
-        0x8000u16 as i16,
-        8389,
-        5243,
-        13108,
-        0x8000u16 as i16,
-    );
-    let shift_var = _mm_setr_epi16(
-        1 &lt;&lt; 7,
-        1 &lt;&lt; 11,
-        1 &lt;&lt; 13,
-        (1 &lt;&lt; 15) as i16,
-        1 &lt;&lt; 7,
-        1 &lt;&lt; 11,
-        1 &lt;&lt; 13,
-        (1 &lt;&lt; 15) as i16,
-    );
-    let mul_10 = _mm_set1_epi16(10);
-    let ascii0 = _mm_set1_epi8(48);
-    let x_div_10000 = _mm_srli_epi64::&lt;45&gt;(_mm_mul_epu32(x, div_10000));
-    let y = _mm_add_epi32(x, _mm_mul_epu32(x_div_10000, mul_10000_merge));
-    let t0 = _mm_slli_epi16::&lt;2&gt;(_mm_shuffle_epi32::&lt;5&gt;(_mm_unpacklo_epi16(y, y)));
-    let t1 = _mm_mulhi_epu16(t0, div_var);
-    let t2 = _mm_mulhi_epu16(t1, shift_var);
-    let t3 = _mm_slli_epi64::&lt;16&gt;(t2);
-    let t4 = _mm_mullo_epi16(t3, mul_10);
-    let t5 = _mm_sub_epi16(t2, t4);
-    let t6 = _mm_packus_epi16(_mm_setzero_si128(), t5);
-    let mask = _mm_movemask_epi8(_mm_cmpeq_epi8(t6, _mm_setzero_si128()));
-    let offset = (mask &amp; !0x8000).trailing_ones() as usize;
-    let ascii = _mm_add_epi8(t6, ascii0);
-    _mm_store_si128(out.0.as_mut_ptr().cast(), ascii);
-    offset
-}
-
 impl Reader {
     fn new(capacity: usize) -&gt; Self {
         let ptr;
@@ -987,6 +929,9 @@ impl Reader {
         self.cur = unsafe { self.begin.add(add) };
         self.end = unsafe { self.begin.add(self.cap) };
     }
+    fn consume(&amp;mut self, add: usize) {
+        self.cur = unsafe { self.cur.add(add) };
+    }
     fn until(&amp;mut self, delim: u8, buf: &amp;mut String) -&gt; usize {
         #[target_feature(enable = &quot;avx2,sse4.2&quot;)]
         unsafe fn memchr(s: &amp;[u8], delim: u8) -&gt; Option&lt;usize&gt; {
@@ -1008,6 +953,29 @@ impl Reader {
             }
         }
     }
+    fn remain(&amp;self) -&gt; &amp;[u8] {
+        let len = unsafe { self.end.offset_from(self.cur) } as usize;
+        unsafe { std::slice::from_raw_parts(self.cur, len) }
+    }
+    fn discard(&amp;mut self, until: u8) -&gt; usize {
+        let mut len = 0;
+        #[target_feature(enable = &quot;avx2&quot;)]
+        unsafe fn index(s: &amp;[u8], b: u8) -&gt; Option&lt;usize&gt; {
+            s.iter().position(|&amp;c| c == b)
+        }
+        loop {
+            let pos = unsafe { index(self.remain(), until) };
+            if let Some(pos) = pos {
+                len += pos;
+                self.cur = unsafe { self.cur.add(pos + 1) };
+                break len;
+            }
+            len += unsafe { self.end.offset_from(self.cur) } as usize;
+            self.cur = self.end;
+            self.try_refill(1);
+        }
+    }
+
     fn i32(&amp;mut self) -&gt; i32 {
         let sign = unsafe { self.cur.read() } == b'-';
         (if sign {
@@ -1094,7 +1062,60 @@ impl Reader {
         c
     }
 }
-
+struct Writer {
+    buf: Vec&lt;u8&gt;,
+    off: usize,
+}
+impl Drop for Writer {
+    fn drop(&amp;mut self) {
+        self.flush();
+    }
+}
+#[repr(align(16))]
+struct B128([u8; 16]);
+#[target_feature(enable = &quot;avx2&quot;)]
+unsafe fn cvt8(out: &amp;mut B128, n: u32) -&gt; usize {
+    use std::arch::x86_64::*;
+    let x = _mm_cvtsi32_si128(n as i32);
+    let div_10000 = _mm_set1_epi32(0xd1b71759u32 as i32);
+    let mul_10000_merge = _mm_set1_epi32(55536);
+    let div_var = _mm_setr_epi16(
+        8389,
+        5243,
+        13108,
+        0x8000u16 as i16,
+        8389,
+        5243,
+        13108,
+        0x8000u16 as i16,
+    );
+    let shift_var = _mm_setr_epi16(
+        1 &lt;&lt; 7,
+        1 &lt;&lt; 11,
+        1 &lt;&lt; 13,
+        (1 &lt;&lt; 15) as i16,
+        1 &lt;&lt; 7,
+        1 &lt;&lt; 11,
+        1 &lt;&lt; 13,
+        (1 &lt;&lt; 15) as i16,
+    );
+    let mul_10 = _mm_set1_epi16(10);
+    let ascii0 = _mm_set1_epi8(48);
+    let x_div_10000 = _mm_srli_epi64::&lt;45&gt;(_mm_mul_epu32(x, div_10000));
+    let y = _mm_add_epi32(x, _mm_mul_epu32(x_div_10000, mul_10000_merge));
+    let t0 = _mm_slli_epi16::&lt;2&gt;(_mm_shuffle_epi32::&lt;5&gt;(_mm_unpacklo_epi16(y, y)));
+    let t1 = _mm_mulhi_epu16(t0, div_var);
+    let t2 = _mm_mulhi_epu16(t1, shift_var);
+    let t3 = _mm_slli_epi64::&lt;16&gt;(t2);
+    let t4 = _mm_mullo_epi16(t3, mul_10);
+    let t5 = _mm_sub_epi16(t2, t4);
+    let t6 = _mm_packus_epi16(_mm_setzero_si128(), t5);
+    let mask = _mm_movemask_epi8(_mm_cmpeq_epi8(t6, _mm_setzero_si128()));
+    let offset = (mask &amp; !0x8000).trailing_ones() as usize;
+    let ascii = _mm_add_epi8(t6, ascii0);
+    _mm_store_si128(out.0.as_mut_ptr().cast(), ascii);
+    offset
+}
 impl Writer {
     fn new(capacity: usize) -&gt; Self {
         Self {

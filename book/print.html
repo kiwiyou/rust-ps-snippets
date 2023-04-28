@@ -985,15 +985,6 @@ impl Reader {
             self.u32()
         }) as i32
     }
-    fn i64(&amp;mut self) -&gt; i64 {
-        let sign = unsafe { self.cur.read() } == b'-';
-        (if sign {
-            self.cur = unsafe { self.cur.add(1) };
-            self.u64().wrapping_neg()
-        } else {
-            self.u64()
-        }) as i64
-    }
     fn u32(&amp;mut self) -&gt; u32 {
         let mut c = unsafe { self.cur.cast::&lt;u64&gt;().read_unaligned() };
         let m = !c &amp; 0x1010101010101010;
@@ -1017,6 +1008,15 @@ impl Reader {
         }
         self.cur = unsafe { self.cur.add(1) };
         c as u32
+    }
+    fn i64(&amp;mut self) -&gt; i64 {
+        let sign = unsafe { self.cur.read() } == b'-';
+        (if sign {
+            self.cur = unsafe { self.cur.add(1) };
+            self.u64().wrapping_neg()
+        } else {
+            self.u64()
+        }) as i64
     }
     fn u64(&amp;mut self) -&gt; u64 {
         let mut c = unsafe { self.cur.cast::&lt;u64&gt;().read_unaligned() };

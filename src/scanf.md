@@ -1,4 +1,4 @@
-# Base Template
+# Scanf
 
 You can use scanf. Not the best API, but I think it fits best for PS area.
 
@@ -6,6 +6,8 @@ You can use scanf. Not the best API, but I think it fits best for PS area.
 fn solve() {
     scanf!("%d%d", a: i32, b: i32);
     println!("{}", a + b);
+    scanf!("%s", name: [u8; 32]);
+    println!("{name}");
 }
 
 fn main() {

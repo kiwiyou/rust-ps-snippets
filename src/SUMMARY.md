@@ -10,6 +10,7 @@
 - [Arbitrary Precision Integer](bigint.md)
 - [Bitset](bitset.md)
 - [Fast IO](io.md)
+- [scanf](scanf.md)
 
 # Math
 

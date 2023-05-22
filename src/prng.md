@@ -24,7 +24,7 @@ impl Rng {
     }
     fn next(&mut self, n: u64) -> u64 {
         let [x, y, z, c] = &mut self.0;
-        let t = x.wrapping_shl(58) + *c;
+        let t = x.wrapping_shl(58).wrapping_add(*c);
         *c = *x >> 6;
         *x = x.wrapping_add(t);
         if *x < t {

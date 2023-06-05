@@ -33,6 +33,7 @@
 - [Adjacency Array](adjacency-array.md)
 - [Heavy-Light Decomposition](hld.md)
 - [Push-Relabel Flow](flow.md)
+- [Min Heap](heap.md)
 
 # Strings
 

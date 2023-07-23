@@ -4,7 +4,7 @@ Graphs are represented with **Adjacency Array**s.
 All edges on the graph are stored in a single array
 such that edges with the same starting vertex are connected like a linked list.
 
-- `edge` stores previous edge indices.
+- `link` stores (previous edge index, endpoint) tuples.
 - `head` stores indices of edge list heads (or `u32::MAX` if none).
 
 ```rust

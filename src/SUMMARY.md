@@ -11,6 +11,7 @@
 - [Bitset](bitset.md)
 - [Fast IO](io.md)
 - [scanf](scanf.md)
+- [Float128](f128.md)
 
 # Math
 

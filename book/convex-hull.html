@@ -145,23 +145,23 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="convex-hull-monotone-chain"><a class="header" href="#convex-hull-monotone-chain">Convex Hull (Monotone Chain)</a></h1>
-<p>Returns points in convex hull in clockwise order.</p>
+<p>Returns points in convex hull in counterclockwise order.</p>
 <p>Removes straight points. change <code>is_ge()</code> (resp. <code>is_le()</code>) to <code>.is_gt()</code> (resp. <code>is_lt</code>) to contain straight points.</p>
 <pre><code class="language-rust noplayground">fn convex_hull(sorted_pts: &amp;[(i32, i32)]) -&gt; Vec&lt;(i32, i32)&gt; {
     let mut hull = vec![];
     let mut len = 0;
     for &amp;p in sorted_pts.iter() {
-        while len &gt;= 2 &amp;&amp; turn(hull[len - 2], hull[len - 1], p).is_ge() {
+        while len &gt;= 2 &amp;&amp; turn(hull[len - 2], hull[len - 1], p).is_le() {
             hull.pop();
             len -= 1;
         }
         hull.push(p);
         len += 1;
     }
-    let up = len;
+    let down = len;
     let mut len = 0;
     for &amp;p in sorted_pts.iter() {
-        while len &gt;= 2 &amp;&amp; turn(hull[up + len - 2], hull[up + len - 1], p).is_le() {
+        while len &gt;= 2 &amp;&amp; turn(hull[down + len - 2], hull[down + len - 1], p).is_ge() {
             hull.pop();
             len -= 1;
         }
@@ -170,10 +170,10 @@
     }
     let mut offset = 0;
     let mut j = 0;
-    for i in up..hull.len() {
+    for i in down..hull.len() {
         let p = hull[i];
         hull[i - offset] = p;
-        while j &lt; up {
+        while j &lt; down {
             match hull[j].cmp(&amp;p) {
                 std::cmp::Ordering::Less =&gt; j += 1,
                 std::cmp::Ordering::Equal =&gt; {
@@ -185,7 +185,7 @@
         }
     }
     hull.truncate(hull.len() - offset);
-    hull[up..].reverse();
+    hull[down..].reverse();
     hull
 }
 

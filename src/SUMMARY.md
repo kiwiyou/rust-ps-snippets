@@ -23,6 +23,7 @@
 # Geometry
 
 - [Convex Hull](convex-hull.md)
+- [Antipodal Points](antipodes.md)
 
 # Data Structures
 

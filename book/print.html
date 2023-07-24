@@ -1719,12 +1719,12 @@ impl ModU64 {
 }</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="convex-hull-monotone-chain"><a class="header" href="#convex-hull-monotone-chain">Convex Hull (Monotone Chain)</a></h1>
 <p>Returns up half and down half of the convex hull.</p>
-<p>Removes straight points. change <code>!= Ordering::Less</code> to <code>== Ordering::Greater</code> and vice versa to contain straight points.</p>
+<p>Removes straight points. change <code>is_ge()</code> (resp. <code>is_le()</code>) to <code>.is_gt()</code> (resp. <code>is_lt</code>) to contain straight points.</p>
 <pre><code class="language-rust noplayground">fn convex_hull(sorted_pts: &amp;[(i32, i32)]) -&gt; (Vec&lt;(i32, i32)&gt;, Vec&lt;(i32, i32)&gt;) {
     let mut up = vec![];
     let mut len = up.len();
     for &amp;p in &amp;sorted_pts {
-        while len &gt;= 2 &amp;&amp; turn(up[len - 2], up[len - 1], p) != Ordering::Less {
+        while len &gt;= 2 &amp;&amp; turn(up[len - 2], up[len - 1], p).is_ge() {
             up.pop();
             len -= 1;
         }
@@ -1734,7 +1734,7 @@ impl ModU64 {
     let mut down = vec![];
     let mut len = down.len();
     for &amp;p in &amp;sorted_pts {
-        while len &gt;= 2 &amp;&amp; turn(down[len - 2], down[len - 1], p) != Ordering::Greater {
+        while len &gt;= 2 &amp;&amp; turn(down[len - 2], down[len - 1], p).is_le() {
             down.pop();
             len -= 1;
         }

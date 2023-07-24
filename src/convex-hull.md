@@ -2,14 +2,14 @@
 
 Returns up half and down half of the convex hull.
 
-Removes straight points. change `!= Ordering::Less` to `== Ordering::Greater` and vice versa to contain straight points.
+Removes straight points. change `is_ge()` (resp. `is_le()`) to `.is_gt()` (resp. `is_lt`) to contain straight points.
 
 ```rust,noplayground
 fn convex_hull(sorted_pts: &[(i32, i32)]) -> (Vec<(i32, i32)>, Vec<(i32, i32)>) {
     let mut up = vec![];
     let mut len = up.len();
     for &p in &sorted_pts {
-        while len >= 2 && turn(up[len - 2], up[len - 1], p) != Ordering::Less {
+        while len >= 2 && turn(up[len - 2], up[len - 1], p).is_ge() {
             up.pop();
             len -= 1;
         }
@@ -19,7 +19,7 @@ fn convex_hull(sorted_pts: &[(i32, i32)]) -> (Vec<(i32, i32)>, Vec<(i32, i32)>) 
     let mut down = vec![];
     let mut len = down.len();
     for &p in &sorted_pts {
-        while len >= 2 && turn(down[len - 2], down[len - 1], p) != Ordering::Greater {
+        while len >= 2 && turn(down[len - 2], down[len - 1], p).is_le() {
             down.pop();
             len -= 1;
         }

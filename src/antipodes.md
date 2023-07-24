@@ -3,107 +3,70 @@
 An iterator that yields every antipodal pairs.
 
 ```rust,noplayground
-struct Antipodes<'a> {
-    hull: &'a [(i32, i32)],
-    p0: usize,
-    q0: usize,
-    p: usize,
-    q: usize,
-    first: Option<bool>,
+struct Antipodes<T> {
+    i: usize,
+    p: T,
+    q: T,
+    p1: T,
+    q1: T,
 }
 
-impl Iterator for Antipodes<'_> {
+impl<'a, T> Iterator for Antipodes<std::iter::Peekable<T>>
+where
+    T: Iterator<Item = &'a (i32, i32)> + Clone,
+{
     type Item = ((i32, i32), (i32, i32));
 
     fn next(&mut self) -> Option<Self::Item> {
-        use std::cmp::Ordering::*;
-        if !self.first? {
-            loop {
-                match area(
-                    self.hull[self.p],
-                    self.hull[self.next_index(self.p)],
-                    self.hull[self.next_index(self.q)],
-                )
-                .cmp(&area(
-                    self.hull[self.p],
-                    self.hull[self.next_index(self.p)],
-                    self.hull[self.q],
-                )) {
-                    Less => break,
-                    Equal => {
-                        self.first = Some(true);
-                        if (self.p, self.q) != (self.q0, self.p0) {
-                            return Some((self.hull[self.p], self.hull[self.next_index(self.q)]));
-                        } else {
-                            return Some((self.hull[self.next_index(self.p)], self.hull[self.q]));
-                        }
-                    }
-                    Greater => {
-                        self.q = self.next_index(self.q);
-                        if (self.p, self.q) != (self.q0, self.p0) {
-                            return Some((self.hull[self.p], self.hull[self.q]));
-                        } else {
-                            self.first = None;
-                            return None;
-                        }
-                    }
-                }
-            }
+        if self.i == 0 {
+            return None;
         }
-        if self.p == self.q0 {
-            self.first = None;
-            None
+        self.i -= 1;
+        let p = **self.p.peek()?;
+        let p1 = **self.p1.peek()?;
+        let q = **self.q.peek()?;
+        let q1 = **self.q1.peek()?;
+        if cross(p, p1, q) < cross(p, p1, q1) {
+            self.q = self.q1.clone();
+            Some((**self.p.peek()?, *self.q1.next()?))
         } else {
-            self.first = Some(false);
-            self.p = self.next_index(self.p);
-            Some((self.hull[self.p], self.hull[self.q]))
+            self.p = self.p1.clone();
+            Some((*self.p1.next()?, **self.q.peek()?))
         }
     }
 }
 
-impl<'a> Antipodes<'a> {
-    fn new(hull: &'a [(i32, i32)]) -> Self {
-        let mut this = Self {
-            hull,
-            p: 0,
-            q: 0,
-            p0: hull.len() - 1,
-            q0: 0,
-            first: Some(true),
-        };
-        this.init();
-        this
-    }
-    fn next_index(&self, i: usize) -> usize {
-        if i + 1 >= self.hull.len() {
-            0
-        } else {
-            i + 1
+impl<'a> Antipodes<std::iter::Peekable<std::iter::Cycle<std::slice::Iter<'a, (i32, i32)>>>> {
+    fn from_hull(hull: &'a [(i32, i32)]) -> Self {
+        let mut base = hull.iter().cycle().peekable();
+        let mut p = base.clone();
+        base.next();
+        let mut p1 = base.clone();
+        let mut q = base.clone();
+        base.next();
+        let mut q1 = base;
+        let pp = **p.peek().unwrap();
+        let pp1 = **p1.peek().unwrap();
+        while cross(pp, pp1, **q.peek().unwrap()) < cross(pp, pp1, **q1.peek().unwrap()) {
+            q = q1.clone();
+            q1.next();
         }
-    }
-    fn init(&mut self) {
-        let mut q = self.next_index(self.p);
-        while area(
-            self.hull[self.p],
-            self.hull[self.next_index(self.p)],
-            self.hull[self.next_index(q)],
-        ) > area(
-            self.hull[self.p],
-            self.hull[self.next_index(self.p)],
-            self.hull[q],
-        ) {
-            q = self.next_index(q);
-        }
-        self.q = q;
-        self.q0 = q;
+        let i = hull.len();
+        Self { i, p, p1, q, q1 }
     }
 }
 
-// Double triangle area, input in ccw order
-fn area(a: (i32, i32), b: (i32, i32), c: (i32, i32)) -> i64 {
-    a.0 as i64 * b.1 as i64 + b.0 as i64 * c.1 as i64 + c.0 as i64 * a.1 as i64
-        - a.1 as i64 * b.0 as i64
-        - b.1 as i64 * c.0 as i64
-        - c.1 as i64 * a.0 as i64
+// Less => cw
+// Greater => ccw
+fn turn(a: (i32, i32), b: (i32, i32), c: (i32, i32)) -> std::cmp::Ordering {
+    cross(a, b, c).cmp(&0)
+}
+
+fn cross((ax, ay): (i32, i32), (bx, by): (i32, i32), (cx, cy): (i32, i32)) -> i64 {
+    let abx = (bx - ax) as i64;
+    let aby = (by - ay) as i64;
+    let bcx = (cx - bx) as i64;
+    let bcy = (cy - by) as i64;
+    abx * bcy - aby * bcx
 }
 ```

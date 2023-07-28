@@ -1147,10 +1147,10 @@ unsafe fn cvt8(out: &amp;mut B128, n: u32) -&gt; usize {
 }
 impl Writer {
     fn new(capacity: usize) -&gt; Self {
-        Self {
-            buf: vec![0; capacity],
-            off: 0,
-        }
+        let mut buf = vec![];
+        buf.reserve_exact(capacity);
+        unsafe { buf.set_len(capacity) };
+        Self { buf, off: 0 }
     }
     fn flush(&amp;mut self) {
         unsafe {

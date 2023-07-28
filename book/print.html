@@ -2136,112 +2136,95 @@ represented with Rust Iterator.</p>
 <pre><pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>struct Hld {
-    size: Vec&lt;u32&gt;,
-    parent: Vec&lt;u32&gt;,
-    depth: Vec&lt;u32&gt;,
-    chain: Vec&lt;u32&gt;,
-    index: Vec&lt;u32&gt;,
+    p: Vec&lt;u32&gt;,
+    d: Vec&lt;u32&gt;,
+    r: Vec&lt;u32&gt;,
+}
+
+impl Graph {
+    fn hld(&amp;self, root: usize) -&gt; Hld {
+        let n = self.head.len();
+        let mut d = vec![0; n];
+        let mut p = vec![0; n];
+        p[root] = root as u32;
+        let mut bfs = vec![(root as u32, 0, 1, 0)];
+        let mut front = 0;
+        let mut depth = 0;
+        while front &lt; bfs.len() {
+            let back = bfs.len();
+            for i in front..back {
+                let u = bfs[i].0 as usize;
+                let pu = p[u];
+                d[u] = depth;
+                for (_, v) in self.neighbor(u) {
+                    if v == pu as usize {
+                        continue;
+                    }
+                    bfs.push((v as u32, i as u32, 1, 0));
+                    p[v] = u as u32;
+                }
+            }
+            front = back;
+            depth += 1;
+        }
+        let bfs = &amp;mut bfs[..];
+        for i in (1..bfs.len()).rev() {
+            let (_, p, sz, _) = bfs[i];
+            let (_, _, usz, umax) = &amp;mut bfs[p as usize];
+            *usz += sz;
+            *umax = sz.max(*umax);
+        }
+        let mut r = vec![0; n];
+        for i in 1..bfs.len() {
+            let (v, p, sz, _) = bfs[i];
+            let (u, _, _, umax) = &amp;mut bfs[p as usize];
+            if sz == *umax {
+                r[v as usize] = r[*u as usize];
+                *umax = u32::MAX;
+            } else {
+                r[v as usize] = v;
+            }
+        }
+        Hld { p, d, r }
+    }
 }
 
 impl Hld {
-    fn make(g: &amp;mut Graph, root: usize) -&gt; Self {
-        let v = g.head.len();
-        let mut size = vec![1; v];
-        let mut parent = (0..v as u32).collect::&lt;Vec&lt;_&gt;&gt;();
-        let mut depth = vec![0; v];
-        let mut dfs = vec![(g.head[root], root as u32, 0)];
-        let mut d = 0;
-        while let Some((e, u, _)) = dfs.last_mut() {
-            if let Some(&amp;(next, v)) = g.link.get(*e as usize) {
-                if v == parent[*e as usize] {
-                    *e = next;
-                } else {
-                    parent[v as usize] = *u;
-                    d += 1;
-                    depth[v as usize] = d;
-                    dfs.push((g.head[v as usize], v, 0));
-                }
-            } else {
-                let (ve, v, _) = dfs.pop().unwrap();
-                if let Some((e, u, max)) = dfs.last_mut() {
-                    d -= 1;
-                    size[*u as usize] += size[v as usize];
-                    if size[v as usize] &gt; *max {
-                        *max = size[v as usize];
-                        let first = g.head[*u as usize] as usize;
-                        (g.link[first].1, g.link[ve as usize].1) =
-                            (g.link[ve as usize].1, g.link[first].1);
-                    }
-                    *e = g.link[*e as usize].0;
-                }
-            }
-        }
-        let mut chain = vec![0; v];
-        let mut index = vec![u32::MAX; v];
-        let mut heavy_dfs = vec![(g.head[root], root as u32)];
-        let mut dfs = vec![];
-        let mut i = 0;
-        index[root as usize] = i;
-        i += 1;
-        loop {
-            if let Some((e, r)) = heavy_dfs.pop() {
-                if let Some(&amp;(next, v)) = g.link.get(e as usize) {
-                    chain[v as usize] = r;
-                    index[v as usize] = i;
-                    i += 1;
-                    heavy_dfs.push((g.head[v as usize], r));
-                    dfs.push(next);
-                }
-            } else if let Some(e) = dfs.last_mut() {
-                if let Some(&amp;(next, v)) = g.link.get(*e as usize) {
-                    *e = next;
-                    if index[v as usize] == u32::MAX {
-                        chain[v as usize] = v;
-                        index[v as usize] = i;
-                        i += 1;
-                        heavy_dfs.push((g.head[v as usize], v));
-                    }
-                } else {
-                    dfs.pop();
-                }
-            } else {
-                break;
-            }
-        }
-        Self {
-            size,
-            parent,
-            depth,
-            chain,
-            index,
-        }
-    }
     fn path(&amp;self, u: usize, v: usize) -&gt; HldPath {
-        HldPath(self, Some((u, v)))
+        HldPath { hld: self, u, v }
     }
 }
 
-struct HldPath&lt;'a&gt;(&amp;'a Hld, Option&lt;(usize, usize)&gt;);
+struct HldPath&lt;'a&gt; {
+    hld: &amp;'a Hld,
+    u: usize,
+    v: usize,
+}
 
-impl&lt;'a&gt; Iterator for HldPath&lt;'a&gt; {
-    // (upper (thus lower index) node, lower node)
+impl Iterator for HldPath&lt;'_&gt; {
+    // (upper, lower)
     type Item = (usize, usize);
+
     fn next(&amp;mut self) -&gt; Option&lt;Self::Item&gt; {
-        let (mut u, mut v) = self.1?;
-        if self.0.chain[u] == self.0.chain[v] {
-            if self.0.depth[u] &gt; self.0.depth[v] {
-                (u, v) = (v, u);
-            }
-            self.1 = None;
-            Some((u, v))
+        if self.u == usize::MAX {
+            return None;
+        }
+        let ru = self.hld.r[self.u] as usize;
+        let mut rv = self.hld.r[self.v] as usize;
+        if ru == rv {
+            let ret = if self.hld.d[self.u] &gt; self.hld.d[self.v] {
+                (self.v, self.u)
+            } else {
+                (self.u, self.v)
+            };
+            self.u = usize::MAX;
+            Some(ret)
         } else {
-            let ru = self.0.chain[u] as usize;
-            let mut rv = self.0.chain[v] as usize;
-            if self.0.depth[ru] &gt; self.0.depth[rv] {
-                (u, v, rv) = (v, u, ru);
+            if self.hld.d[ru] &gt; self.hld.d[rv] {
+                (rv, self.u, self.v) = (ru, self.v, self.u);
             }
-            self.1 = Some((u, self.0.parent[rv] as usize));
-            Some((rv, v))
+            self.v = self.hld.p[rv] as usize;
+            Some((rv, self.v))
         }
     }
 }

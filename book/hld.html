@@ -193,8 +193,9 @@ impl Graph {
             let (v, p, sz, _) = bfs[i];
             let (u, _, _, umax) = &amp;mut bfs[p as usize];
             if sz == *umax {
-                r[v as usize] = r[*u as usize];
+                r[v as usize] = *u;
                 *umax = u32::MAX;
+                bfs[i].0 = *u;
             } else {
                 r[v as usize] = v;
             }

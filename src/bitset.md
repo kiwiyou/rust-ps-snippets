@@ -32,6 +32,38 @@ impl Bitset {
         };
         b64[i / 64] ^= 1 << (i % 64);
     }
+    fn lsh(&mut self, x: usize) -> Self {
+        if x >= self.0.len() * 256 {
+            return unsafe { Self::new(self.0.len() * 256) };
+        }
+        let mut new = vec![];
+        new.reserve_exact(self.0.len());
+        unsafe { new.set_len(self.0.len()) };
+        let b64 = unsafe {
+            std::slice::from_raw_parts_mut(self.0.as_mut_ptr() as *mut u64, self.0.len() * 4)
+        };
+        let new64 =
+            unsafe { std::slice::from_raw_parts_mut(new.as_mut_ptr() as *mut u64, new.len() * 4) };
+        let high = x / 64;
+        let (l, r) = new64.split_at_mut(high);
+        l.fill(0);
+        r.copy_from_slice(&b64[..r.len()]);
+        let low = x % 64;
+        let mut prev = 0;
+        for x in r {
+            let temp = x.wrapping_shr(64 - low as u32);
+            *x = x.wrapping_shl(low as u32);
+            *x |= prev;
+            prev = temp;
+        }
+        Self(new)
+    }
+    #[target_feature(enable = "avx2")]
+    unsafe fn or(&mut self, other: &Self) {
+        for (a, &b) in self.0.iter_mut().zip(&other.0) {
+            *a = std::arch::x86_64::_mm256_or_si256(*a, b);
+        }
+    }
     fn split_range(mut begin: usize, end: usize) -> Option<(usize, usize)> {
         let back = end & !255;
         if begin & 255 != 0 {

@@ -32,7 +32,7 @@ impl Bitset {
         };
         b64[i / 64] ^= 1 << (i % 64);
     }
-    fn lsh(&mut self, x: usize) -> Self {
+    fn shl(&mut self, x: usize) -> Self {
         if x >= self.0.len() * 256 {
             return unsafe { Self::new(self.0.len() * 256) };
         }
@@ -47,14 +47,12 @@ impl Bitset {
         let high = x / 64;
         let (l, r) = new64.split_at_mut(high);
         l.fill(0);
-        r.copy_from_slice(&b64[..r.len()]);
         let low = x % 64;
         let mut prev = 0;
-        for x in r {
-            let temp = x.wrapping_shr(64 - low as u32);
-            *x = x.wrapping_shl(low as u32);
-            *x |= prev;
-            prev = temp;
+        for (xr, &xs) in r.iter_mut().zip(&b64) {
+            *xr = xs.wrapping_shl(low as u32);
+            *xr |= prev;
+            prev = xs.wrapping_shr(64 - low as u32);
         }
         Self(new)
     }

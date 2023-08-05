@@ -176,6 +176,36 @@ impl Bitset {
         };
         b64[i / 64] ^= 1 &lt;&lt; (i % 64);
     }
+    fn shl(&amp;mut self, x: usize) -&gt; Self {
+        if x &gt;= self.0.len() * 256 {
+            return unsafe { Self::new(self.0.len() * 256) };
+        }
+        let mut new = vec![];
+        new.reserve_exact(self.0.len());
+        unsafe { new.set_len(self.0.len()) };
+        let b64 = unsafe {
+            std::slice::from_raw_parts_mut(self.0.as_mut_ptr() as *mut u64, self.0.len() * 4)
+        };
+        let new64 =
+            unsafe { std::slice::from_raw_parts_mut(new.as_mut_ptr() as *mut u64, new.len() * 4) };
+        let high = x / 64;
+        let (l, r) = new64.split_at_mut(high);
+        l.fill(0);
+        let low = x % 64;
+        let mut prev = 0;
+        for (xr, &amp;xs) in r.iter_mut().zip(&amp;b64) {
+            *xr = xs.wrapping_shl(low as u32);
+            *xr |= prev;
+            prev = xs.wrapping_shr(64 - low as u32);
+        }
+        Self(new)
+    }
+    #[target_feature(enable = &quot;avx2&quot;)]
+    unsafe fn or(&amp;mut self, other: &amp;Self) {
+        for (a, &amp;b) in self.0.iter_mut().zip(&amp;other.0) {
+            *a = std::arch::x86_64::_mm256_or_si256(*a, b);
+        }
+    }
     fn split_range(mut begin: usize, end: usize) -&gt; Option&lt;(usize, usize)&gt; {
         let back = end &amp; !255;
         if begin &amp; 255 != 0 {

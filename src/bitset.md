@@ -1,7 +1,7 @@
 # Bitset
 
 ```rust,noplayground
-struct Bitset(Vec<std::arch::x86_64::__m256i>);
+struct Bitset(Vec<std::arch::x86_64::__m256i>, usize);
 
 impl Bitset {
     #[target_feature(enable = "avx2")]
@@ -9,7 +9,10 @@ impl Bitset {
         use std::arch::x86_64::*;
         let mut v = vec![];
         v.resize_with((n + 255) / 256, || unsafe { _mm256_setzero_si256() });
-        Self(v)
+        Self(v, n)
+    }
+    fn len(&self) -> usize {
+        self.1
     }
     fn get(&self, i: usize) -> bool {
         let b64 =
@@ -32,29 +35,31 @@ impl Bitset {
         };
         b64[i / 64] ^= 1 << (i % 64);
     }
-    fn shl(&mut self, x: usize) -> Self {
-        if x >= self.0.len() * 256 {
-            return unsafe { Self::new(self.0.len() * 256) };
-        }
-        let mut new = vec![];
-        new.reserve_exact(self.0.len());
-        unsafe { new.set_len(self.0.len()) };
-        let b64 = unsafe {
-            std::slice::from_raw_parts_mut(self.0.as_mut_ptr() as *mut u64, self.0.len() * 4)
+    fn shl(&self, x: usize) -> Self {
+        let mut shl = unsafe { Self::new(self.len() + x) };
+        let shl_b64 = unsafe {
+            std::slice::from_raw_parts_mut(shl.0.as_mut_ptr().cast::<u64>(), (shl.len() + 63) / 64)
         };
-        let new64 =
-            unsafe { std::slice::from_raw_parts_mut(new.as_mut_ptr() as *mut u64, new.len() * 4) };
-        let high = x / 64;
-        let (l, r) = new64.split_at_mut(high);
-        l.fill(0);
-        let low = x % 64;
-        let mut prev = 0;
-        for (xr, &xs) in r.iter_mut().zip(&b64) {
-            *xr = xs.wrapping_shl(low as u32);
-            *xr |= prev;
-            prev = xs.wrapping_shr(64 - low as u32);
+        let b64 = unsafe {
+            std::slice::from_raw_parts(self.0.as_ptr().cast::<u64>(), (self.len() + 63) / 64)
+        };
+        let x_chunk = x / 64;
+        let x_inside = (x % 64) as u32;
+        if x_inside == 0 {
+            for (dest, &src) in shl_b64.iter_mut().skip(x_chunk).zip(b64) {
+                *dest = src.wrapping_shl(x_inside);
+            }
+        } else {
+            let mut low = 0;
+            for (dest, &src) in shl_b64.iter_mut().skip(x_chunk).zip(b64) {
+                *dest = src.wrapping_shl(x_inside) | low;
+                low = src >> (64 - x_inside);
+            }
+            if shl_b64.len() > b64.len() + x_chunk {
+                *shl_b64.last_mut().unwrap() = low;
+            }
         }
-        Self(new)
+        shl
     }
     #[target_feature(enable = "avx2")]
     unsafe fn or(&mut self, other: &Self) {
@@ -162,7 +167,7 @@ impl Bitset {
     #[target_feature(enable = "avx2")]
     unsafe fn flip_range(&mut self, l: usize, r: usize) {
         let b64 = std::slice::from_raw_parts_mut(self.0.as_mut_ptr() as *mut u64, self.0.len() * 4);
-        if let Some((le, rb)) = self.split_range(l, r) {
+        if let Some((le, rb)) = Self::split_range(l, r) {
             use std::arch::x86_64::*;
             for i in l..le {
                 b64[i >> 6] ^= 1 << (i & 63);
@@ -226,6 +231,23 @@ impl Bitset {
             }
         }
         count
+    }
+}
+
+impl std::fmt::Debug for Bitset {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let b64 =
+            unsafe { std::slice::from_raw_parts(self.0.as_ptr().cast::<u64>(), self.0.len() * 4) };
+        let mut iter = b64.iter().rev().skip_while(|&&b| b == 0);
+        if let Some(&first) = iter.next() {
+            write!(f, "{first:b}")?;
+            for &b in iter {
+                write!(f, "{b:064b}")?;
+            }
+            Ok(())
+        } else {
+            write!(f, "0")
+        }
     }
 }
 ```

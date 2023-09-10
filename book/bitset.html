@@ -145,7 +145,7 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="bitset"><a class="header" href="#bitset">Bitset</a></h1>
-<pre><code class="language-rust noplayground">struct Bitset(Vec&lt;std::arch::x86_64::__m256i&gt;);
+<pre><code class="language-rust noplayground">struct Bitset(Vec&lt;std::arch::x86_64::__m256i&gt;, usize);
 
 impl Bitset {
     #[target_feature(enable = &quot;avx2&quot;)]
@@ -153,7 +153,10 @@ impl Bitset {
         use std::arch::x86_64::*;
         let mut v = vec![];
         v.resize_with((n + 255) / 256, || unsafe { _mm256_setzero_si256() });
-        Self(v)
+        Self(v, n)
+    }
+    fn len(&amp;self) -&gt; usize {
+        self.1
     }
     fn get(&amp;self, i: usize) -&gt; bool {
         let b64 =
@@ -176,29 +179,31 @@ impl Bitset {
         };
         b64[i / 64] ^= 1 &lt;&lt; (i % 64);
     }
-    fn shl(&amp;mut self, x: usize) -&gt; Self {
-        if x &gt;= self.0.len() * 256 {
-            return unsafe { Self::new(self.0.len() * 256) };
-        }
-        let mut new = vec![];
-        new.reserve_exact(self.0.len());
-        unsafe { new.set_len(self.0.len()) };
-        let b64 = unsafe {
-            std::slice::from_raw_parts_mut(self.0.as_mut_ptr() as *mut u64, self.0.len() * 4)
+    fn shl(&amp;self, x: usize) -&gt; Self {
+        let mut shl = unsafe { Self::new(self.len() + x) };
+        let shl_b64 = unsafe {
+            std::slice::from_raw_parts_mut(shl.0.as_mut_ptr().cast::&lt;u64&gt;(), (shl.len() + 63) / 64)
         };
-        let new64 =
-            unsafe { std::slice::from_raw_parts_mut(new.as_mut_ptr() as *mut u64, new.len() * 4) };
-        let high = x / 64;
-        let (l, r) = new64.split_at_mut(high);
-        l.fill(0);
-        let low = x % 64;
-        let mut prev = 0;
-        for (xr, &amp;xs) in r.iter_mut().zip(&amp;b64) {
-            *xr = xs.wrapping_shl(low as u32);
-            *xr |= prev;
-            prev = xs.wrapping_shr(64 - low as u32);
+        let b64 = unsafe {
+            std::slice::from_raw_parts(self.0.as_ptr().cast::&lt;u64&gt;(), (self.len() + 63) / 64)
+        };
+        let x_chunk = x / 64;
+        let x_inside = (x % 64) as u32;
+        if x_inside == 0 {
+            for (dest, &amp;src) in shl_b64.iter_mut().skip(x_chunk).zip(b64) {
+                *dest = src.wrapping_shl(x_inside);
+            }
+        } else {
+            let mut low = 0;
+            for (dest, &amp;src) in shl_b64.iter_mut().skip(x_chunk).zip(b64) {
+                *dest = src.wrapping_shl(x_inside) | low;
+                low = src &gt;&gt; (64 - x_inside);
+            }
+            if shl_b64.len() &gt; b64.len() + x_chunk {
+                *shl_b64.last_mut().unwrap() = low;
+            }
         }
-        Self(new)
+        shl
     }
     #[target_feature(enable = &quot;avx2&quot;)]
     unsafe fn or(&amp;mut self, other: &amp;Self) {
@@ -306,7 +311,7 @@ impl Bitset {
     #[target_feature(enable = &quot;avx2&quot;)]
     unsafe fn flip_range(&amp;mut self, l: usize, r: usize) {
         let b64 = std::slice::from_raw_parts_mut(self.0.as_mut_ptr() as *mut u64, self.0.len() * 4);
-        if let Some((le, rb)) = self.split_range(l, r) {
+        if let Some((le, rb)) = Self::split_range(l, r) {
             use std::arch::x86_64::*;
             for i in l..le {
                 b64[i &gt;&gt; 6] ^= 1 &lt;&lt; (i &amp; 63);
@@ -370,6 +375,23 @@ impl Bitset {
             }
         }
         count
+    }
+}
+
+impl std::fmt::Debug for Bitset {
+    fn fmt(&amp;self, f: &amp;mut std::fmt::Formatter&lt;'_&gt;) -&gt; std::fmt::Result {
+        let b64 =
+            unsafe { std::slice::from_raw_parts(self.0.as_ptr().cast::&lt;u64&gt;(), self.0.len() * 4) };
+        let mut iter = b64.iter().rev().skip_while(|&amp;&amp;b| b == 0);
+        if let Some(&amp;first) = iter.next() {
+            write!(f, &quot;{first:b}&quot;)?;
+            for &amp;b in iter {
+                write!(f, &quot;{b:064b}&quot;)?;
+            }
+            Ok(())
+        } else {
+            write!(f, &quot;0&quot;)
+        }
     }
 }</code></pre>
 

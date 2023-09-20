@@ -63,6 +63,19 @@ impl Hld {
     fn path(&self, u: usize, v: usize) -> HldPath {
         HldPath { hld: self, u, v }
     }
+    fn lca(&self, mut u: usize, mut v: usize) -> usize {
+        while self.r[u] != self.r[v] {
+            if self.d[self.r[u] as usize] > self.d[self.r[v] as usize] {
+                std::mem::swap(&mut u, &mut v);
+            }
+            v = self.p[self.r[v] as usize] as usize;
+        }
+        if self.d[u] > self.d[v] {
+            v
+        } else {
+            u
+        }
+    }
 }
 
 struct HldPath<'a> {

@@ -506,7 +506,7 @@ impl Writer {
             if hi &gt;= 10 {
                 hioff -= 1;
                 hi /= 10;
-                hi128.0[hioff] = hi as u8 + b'0';
+                hi128.0[hioff] = (hi % 10) as u8 + b'0';
             }
             if hi &gt;= 10 {
                 hioff -= 1;

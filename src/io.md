@@ -188,6 +188,11 @@ impl Reader {
                     c += (unsafe { self.cur.read() } - b'0') as u64;
                     self.cur = unsafe { self.cur.add(1) };
                 }
+                if unsafe { self.cur.read() } & 0x10 != 0 {
+                    c *= 10;
+                    c += (unsafe { self.cur.read() } - b'0') as u64;
+                    self.cur = unsafe { self.cur.add(1) };
+                }
             }
         }
         self.cur = unsafe { self.cur.add(1) };
@@ -338,7 +343,7 @@ impl Writer {
         let mut hioff;
         let looff;
         if n >= 10_000_000_000_000_000 {
-            self.try_flush(19);
+            self.try_flush(20);
             let mut hi = (n / 10_000_000_000_000_000) as u32;
             let lo = n % 10_000_000_000_000_000;
             let lohi = (lo / 100_000_000) as u32;
@@ -353,6 +358,11 @@ impl Writer {
                 hioff -= 1;
                 hi /= 10;
                 hi128.0[hioff] = (hi % 10) as u8 + b'0';
+            }
+            if hi >= 10 {
+                hioff -= 1;
+                hi /= 10;
+                hi128.0[hioff] = hi as u8 + b'0';
             }
             if hi >= 10 {
                 hioff -= 1;

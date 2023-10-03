@@ -179,7 +179,7 @@ impl Rng32 {
     }
 }
 
-struct Rng64([u32; 4]);
+struct Rng64([u64; 4]);
 
 impl Rng64 {
     fn split_mix(v: u64) -&gt; u64 {

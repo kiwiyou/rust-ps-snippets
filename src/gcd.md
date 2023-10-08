@@ -1,11 +1,21 @@
 # GCD
 
 ```rust,noplayground
-fn gcd(a: u64, b: u64) -> u64 {
+fn gcd(mut a: i32, mut b: i32) -> i32 {
     if a == 0 || b == 0 {
         a + b
     } else {
-        gcd(b, a % b)
+        let az = a.trailing_zeros();
+        let bz = b.trailing_zeros();
+        let s = az.min(bz);
+        a >>= az;
+        b >>= bz;
+        while a != 0 {
+            let d = a - b;
+            (a, b) = (d.abs(), a.min(b));
+            a >>= d.trailing_zeros();
+        }
+        b << s
     }
 }
 

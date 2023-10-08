@@ -477,6 +477,16 @@ impl BigInt {
             self.unsigned_add_assign(rhs);
         }
     }
+    fn divmod_scalar(&amp;mut self, rhs: u64) -&gt; u64 {
+        let mut borrow = 0;
+        for d in self.1.iter_mut().rev() {
+            borrow *= RADIX;
+            borrow += *d;
+            (*d, borrow) = (borrow / rhs, borrow % rhs);
+        }
+        self.normalize();
+        borrow
+    }
     fn mul(&amp;mut self, rhs: &amp;Self) {
         const NTT_0_INV: u64 = 285212675;
         let pad = (self.1.len() + rhs.1.len() - 1).next_power_of_two();

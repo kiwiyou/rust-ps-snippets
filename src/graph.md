@@ -1,6 +1,6 @@
-# Adjacency Array
+# Graph
 
-Graphs are represented with **Adjacency Array**s.
+Graphs are represented in **Compressed Sparse Row** format.
 All edges on the graph are stored in a single array
 such that edges with the same starting vertex are connected like a linked list.
 

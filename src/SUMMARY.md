@@ -32,7 +32,7 @@
 
 # Graphs
 
-- [Adjacency Array](adjacency-array.md)
+- [Graph Representation](graph.md)
 - [Heavy-Light Decomposition](hld.md)
 - [Push-Relabel Flow](flow.md)
 - [Min Heap](heap.md)

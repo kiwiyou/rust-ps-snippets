@@ -29,6 +29,7 @@
 
 - [Segment Tree](segment-tree.md)
 - [Splay Tree](splay-tree.md)
+- [Weighted DSU](wdsu.md)
 
 # Graphs
 

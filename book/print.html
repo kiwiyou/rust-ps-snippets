@@ -1857,11 +1857,23 @@ impl ModU64 {
 }</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="convex-hull-monotone-chain"><a class="header" href="#convex-hull-monotone-chain">Convex Hull (Monotone Chain)</a></h1>
 <p>Returns points in convex hull in counterclockwise order.</p>
-<p>Removes straight points. change <code>is_ge()</code> (resp. <code>is_le()</code>) to <code>.is_gt()</code> (resp. <code>is_lt</code>) to contain straight points.</p>
-<pre><code class="language-rust noplayground">fn convex_hull(sorted_pts: &amp;[(i32, i32)]) -&gt; Vec&lt;(i32, i32)&gt; {
+<p>Removes straight points. change <code>is_le()</code> to <code>is_lt</code> to contain straight points.</p>
+<pre><code class="language-rust noplayground">fn d((ax, ay): (i32, i32), (bx, by): (i32, i32)) -&gt; f64 {
+    ((bx - ax) as f64).hypot((by - ay) as f64)
+}
+
+fn sub((ax, ay): (i32, i32), (bx, by): (i32, i32)) -&gt; (i32, i32) {
+    (ax - bx, ay - by)
+}
+
+fn cross((ax, ay): (i32, i32), (bx, by): (i32, i32)) -&gt; i64 {
+    ax as i64 * by as i64 - ay as i64 * bx as i64
+}
+
+fn convex_hull(sorted_pts: &amp;[(i32, i32)]) -&gt; Vec&lt;(i32, i32)&gt; {
     let mut hull = vec![];
     let mut len = 0;
-    for &amp;p in sorted_pts.iter() {
+    for &amp;p in sorted_pts {
         while len &gt;= 2 &amp;&amp; turn(hull[len - 2], hull[len - 1], p).is_le() {
             hull.pop();
             len -= 1;
@@ -1869,45 +1881,19 @@ impl ModU64 {
         hull.push(p);
         len += 1;
     }
-    let down = len;
-    let mut len = 0;
-    for &amp;p in sorted_pts.iter() {
-        while len &gt;= 2 &amp;&amp; turn(hull[down + len - 2], hull[down + len - 1], p).is_ge() {
+    hull.pop();
+    len -= 1;
+    let base = len + 2;
+    for &amp;p in sorted_pts.iter().rev() {
+        while len &gt;= base &amp;&amp; turn(hull[len - 2], hull[len - 1], p).is_le() {
             hull.pop();
             len -= 1;
         }
         hull.push(p);
         len += 1;
     }
-    let mut offset = 0;
-    let mut j = 0;
-    for i in down..hull.len() {
-        let p = hull[i];
-        hull[i - offset] = p;
-        while j &lt; down {
-            match hull[j].cmp(&amp;p) {
-                std::cmp::Ordering::Less =&gt; j += 1,
-                std::cmp::Ordering::Equal =&gt; {
-                    offset += 1;
-                    break;
-                }
-                std::cmp::Ordering::Greater =&gt; break,
-            }
-        }
-    }
-    hull.truncate(hull.len() - offset);
-    hull[down..].reverse();
+    hull.pop();
     hull
-}
-
-// Less =&gt; cw
-// Greater =&gt; ccw
-fn turn((ax, ay): (i32, i32), (bx, by): (i32, i32), (cx, cy): (i32, i32)) -&gt; std::cmp::Ordering {
-    let abx = (bx - ax) as i64;
-    let aby = (by - ay) as i64;
-    let bcx = (cx - bx) as i64;
-    let bcy = (cy - by) as i64;
-    (abx * bcy).cmp(&amp;(aby * bcx))
 }</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="antipodal-points"><a class="header" href="#antipodal-points">Antipodal Points</a></h1>
 <p>An iterator that yields every antipodal pairs.</p>

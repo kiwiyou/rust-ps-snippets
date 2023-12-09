@@ -19,6 +19,7 @@
 - [Linear Recurrence (Constant Coefficient)](rec.md)
 - [Constant Division / Modulo](cdiv.md)
 - [Number Theoretic Transform](ntt.md)
+- [Mulmod](mulmod.md)
 
 # Geometry
 

@@ -46,3 +46,19 @@ where
     }
 }
 ```
+
+## Example
+
+```rust,noplayground
+let haystack = b"AABABAABABAA";
+let needle = b"ABA";
+let mut kmp = Kmp::new(&needle[1..], needle, vec![0]);
+while let Some(pi) = kmp.next() {
+    kmp.pi.push(pi as u32);
+}
+for (i, len) in Kmp::new(haystack, needle, kmp.pi).enumerate() {
+    if len > 0 {
+        println!("Partial match [{}, {}]", i + 1 - len, i);
+    }
+}
+```

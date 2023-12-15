@@ -76,7 +76,7 @@ impl Flow {
         self.h
             .extend(std::iter::repeat(self.head.len() as i32).take(self.head.len()));
         self.last.clear();
-        self.last.resize(self.head.len(), -1);
+        self.last.resize(self.head.len() + 1, -1);
         self.gn[..self.head.len()]
             .iter_mut()
             .enumerate()

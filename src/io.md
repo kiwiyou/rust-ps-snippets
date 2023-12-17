@@ -35,7 +35,7 @@ impl Reader {
         }
     }
     fn try_refill(&mut self, readahead: usize) {
-        if unsafe { self.cur.add(readahead) } <= self.end {
+        if unsafe { self.cur.add(readahead) } < self.end {
             return;
         }
         self.goff += unsafe { self.cur.offset_from(self.begin) } as usize;

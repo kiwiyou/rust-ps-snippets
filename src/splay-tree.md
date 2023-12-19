@@ -34,17 +34,11 @@ impl<Op: SplayOp> Splay<Op> {
     fn push(&mut self) {
         Op::push(self);
     }
-    fn split(&mut self, side: usize) -> Option<Box<Self>> {
+    fn replace(&mut self, side: usize, tree: Option<Box<Self>>) -> Option<Box<Self>> {
         self.push();
-        let c = self.c[side].take();
+        let c = std::mem::replace(&mut self.c[side], tree);
         self.pull();
         c
-    }
-    fn join(&mut self, side: usize, tree: Option<Box<Self>>) {
-        self.push();
-        assert!(self.c[side].is_none());
-        self.c[side] = tree;
-        self.pull();
     }
     fn index(self: Box<Self>, k: usize) -> Box<Self> {
         let mut k = k as u32;

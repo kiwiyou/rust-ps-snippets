@@ -201,8 +201,8 @@ macro_rules! impl_float {
     };
 }
 impl_float!(from f64: __extenddftf2 __trunctfdf2);
-impl_float!(from i64: __floattitf __fixtfti);
-impl_float!(from u64: __floatuntitf __fixunstfti);
+impl_float!(from i64: __floatditf __fixtfdi);
+impl_float!(from u64: __floatunditf __fixunstfdi);
 impl_float!(from i32: __floatsitf __fixtfsi);
 impl_float!(from u32: __floatunsitf __fixunstfsi);
 impl_float!(op Add add __addtf3);
@@ -213,22 +213,6 @@ impl std::ops::Neg for f128 {
     type Output = Self;
     fn neg(self) -&gt; Self::Output {
         unsafe { __negtf3(self) }
-    }
-}
-impl std::cmp::PartialEq for f128 {
-    fn eq(&amp;self, other: &amp;Self) -&gt; bool {
-        unsafe { __eqtf2(*self, *other) == 0 }
-    }
-}
-impl std::cmp::Eq for f128 {}
-impl std::cmp::PartialOrd for f128 {
-    fn partial_cmp(&amp;self, other: &amp;Self) -&gt; Option&lt;std::cmp::Ordering&gt; {
-        Some(self.cmp(other))
-    }
-}
-impl std::cmp::Ord for f128 {
-    fn cmp(&amp;self, other: &amp;Self) -&gt; std::cmp::Ordering {
-        unsafe { __cmptf2(*self, *other).cmp(&amp;0) }
     }
 }
 
@@ -244,14 +228,12 @@ extern &quot;C&quot; {
     fn __negtf3(a: f128) -&gt; f128;
     fn __fixtfsi(a: f128) -&gt; i32;
     fn __fixunstfsi(a: f128) -&gt; u32;
-    fn __fixtfti(a: f128) -&gt; i64;
-    fn __fixunstfti(a: f128) -&gt; u64;
+    fn __fixtfdi(a: f128) -&gt; i64;
+    fn __fixunstfdi(a: f128) -&gt; u64;
     fn __floatsitf(a: i32) -&gt; f128;
     fn __floatunsitf(a: u32) -&gt; f128;
-    fn __floattitf(a: i64) -&gt; f128;
-    fn __floatuntitf(a: u64) -&gt; f128;
-    fn __eqtf2(a: f128, b: f128) -&gt; i32;
-    fn __cmptf2(a: f128, b: f128) -&gt; i32;
+    fn __floatditf(a: i64) -&gt; f128;
+    fn __floatunditf(a: u64) -&gt; f128;
 }</code></pre>
 
                     </main>

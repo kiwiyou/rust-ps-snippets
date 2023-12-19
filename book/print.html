@@ -2079,17 +2079,11 @@ impl&lt;Op: SplayOp&gt; Splay&lt;Op&gt; {
     fn push(&amp;mut self) {
         Op::push(self);
     }
-    fn split(&amp;mut self, side: usize) -&gt; Option&lt;Box&lt;Self&gt;&gt; {
+    fn replace(&amp;mut self, side: usize, tree: Option&lt;Box&lt;Self&gt;&gt;) -&gt; Option&lt;Box&lt;Self&gt;&gt; {
         self.push();
-        let c = self.c[side].take();
+        let c = std::mem::replace(&amp;mut self.c[side], tree);
         self.pull();
         c
-    }
-    fn join(&amp;mut self, side: usize, tree: Option&lt;Box&lt;Self&gt;&gt;) {
-        self.push();
-        assert!(self.c[side].is_none());
-        self.c[side] = tree;
-        self.pull();
     }
     fn index(self: Box&lt;Self&gt;, k: usize) -&gt; Box&lt;Self&gt; {
         let mut k = k as u32;

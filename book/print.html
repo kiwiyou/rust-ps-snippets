@@ -998,26 +998,11 @@ impl std::fmt::Debug for Bitset {
 }
 impl Reader {
     fn new(capacity: usize) -&gt; Self {
-        let ptr;
-        unsafe {
-            std::arch::asm!(
-                &quot;syscall&quot;,
-                inout(&quot;rax&quot;) 9usize =&gt; ptr,
-                in(&quot;rdi&quot;) 0,
-                in(&quot;rsi&quot;) capacity,
-                in(&quot;rdx&quot;) 3,
-                in(&quot;r10&quot;) 2,
-                in(&quot;r8&quot;) 0,
-                in(&quot;r9&quot;) 0,
-                out(&quot;rcx&quot;) _,
-                out(&quot;r11&quot;) _,
-                options(nomem,preserves_flags)
-            );
-        }
+        let begin = unsafe { mmap(0, capacity, 3, 2, 0, 0);
         Self {
-            begin: ptr,
-            end: unsafe { ptr.add(capacity) },
-            cur: ptr,
+            begin,
+            end: unsafe { begin.add(capacity) },
+            cur: begin,
             goff: 0,
             cap: capacity,
         }
@@ -1029,81 +1014,9 @@ impl Reader {
         self.goff += unsafe { self.cur.offset_from(self.begin) } as usize;
         let add = self.goff &amp; 4095;
         self.goff &amp;= !4095;
-        let ptr;
-        unsafe {
-            std::arch::asm!(
-                &quot;syscall&quot;,
-                inout(&quot;rax&quot;) 9usize =&gt; ptr,
-                in(&quot;rdi&quot;) self.begin,
-                in(&quot;rsi&quot;) self.cap,
-                in(&quot;rdx&quot;) 3,
-                in(&quot;r10&quot;) 18,
-                in(&quot;r8&quot;) 0,
-                in(&quot;r9&quot;) self.goff,
-                out(&quot;rcx&quot;) _,
-                out(&quot;r11&quot;) _,
-                options(nomem,preserves_flags)
-            );
-        }
-        self.begin = ptr;
+        self.begin = unsafe { mmap(self.begin as usize, self.cap, 3, 18, 0, self.goff as isize) };
         self.cur = unsafe { self.begin.add(add) };
         self.end = unsafe { self.begin.add(self.cap) };
-    }
-    fn consume(&amp;mut self, add: usize) {
-        self.cur = unsafe { self.cur.add(add) };
-    }
-    fn until(&amp;mut self, delim: u8, buf: &amp;mut String) -&gt; usize {
-        #[target_feature(enable = &quot;avx2,sse4.2&quot;)]
-        unsafe fn memchr(s: &amp;[u8], delim: u8) -&gt; Option&lt;usize&gt; {
-            s.iter().position(|&amp;b| b == delim)
-        }
-        let mut total = 0;
-        loop {
-            let len = unsafe { self.end.offset_from(self.cur) } as usize;
-            let range = unsafe { std::slice::from_raw_parts(self.cur, len) };
-            if let Some(i) = unsafe { memchr(range, delim) } {
-                unsafe { buf.as_mut_vec() }.extend_from_slice(&amp;range[..i]);
-                self.cur = unsafe { self.cur.add(i + 1) };
-                break total + i;
-            } else {
-                unsafe { buf.as_mut_vec() }.extend_from_slice(&amp;range);
-                self.cur = self.end;
-                self.try_refill(1);
-                total += len;
-            }
-        }
-    }
-    fn remain(&amp;self) -&gt; &amp;[u8] {
-        let len = unsafe { self.end.offset_from(self.cur) } as usize;
-        unsafe { std::slice::from_raw_parts(self.cur, len) }
-    }
-    fn discard(&amp;mut self, until: u8) -&gt; usize {
-        let mut len = 0;
-        #[target_feature(enable = &quot;avx2&quot;)]
-        unsafe fn index(s: &amp;[u8], b: u8) -&gt; Option&lt;usize&gt; {
-            s.iter().position(|&amp;c| c == b)
-        }
-        loop {
-            let pos = unsafe { index(self.remain(), until) };
-            if let Some(pos) = pos {
-                len += pos;
-                self.cur = unsafe { self.cur.add(pos + 1) };
-                break len;
-            }
-            len += unsafe { self.end.offset_from(self.cur) } as usize;
-            self.cur = self.end;
-            self.try_refill(1);
-        }
-    }
-
-    fn i32(&amp;mut self) -&gt; i32 {
-        let sign = unsafe { self.cur.read() } == b'-';
-        (if sign {
-            self.cur = unsafe { self.cur.add(1) };
-            self.u32().wrapping_neg()
-        } else {
-            self.u32()
-        }) as i32
     }
     fn u32(&amp;mut self) -&gt; u32 {
         let mut c = unsafe { self.cur.cast::&lt;u64&gt;().read_unaligned() };
@@ -1129,14 +1042,14 @@ impl Reader {
         self.cur = unsafe { self.cur.add(1) };
         c as u32
     }
-    fn i64(&amp;mut self) -&gt; i64 {
+    fn i32(&amp;mut self) -&gt; i32 {
         let sign = unsafe { self.cur.read() } == b'-';
         (if sign {
             self.cur = unsafe { self.cur.add(1) };
-            self.u64().wrapping_neg()
+            self.u32().wrapping_neg()
         } else {
-            self.u64()
-        }) as i64
+            self.u32()
+        }) as i32
     }
     fn u64(&amp;mut self) -&gt; u64 {
         let mut c = unsafe { self.cur.cast::&lt;u64&gt;().read_unaligned() };
@@ -1185,6 +1098,61 @@ impl Reader {
         }
         self.cur = unsafe { self.cur.add(1) };
         c
+    }
+    fn i64(&amp;mut self) -&gt; i64 {
+        let sign = unsafe { self.cur.read() } == b'-';
+        (if sign {
+            self.cur = unsafe { self.cur.add(1) };
+            self.u64().wrapping_neg()
+        } else {
+            self.u64()
+        }) as i64
+    }
+    fn consume(&amp;mut self, add: usize) {
+        self.cur = unsafe { self.cur.add(add) };
+    }
+    fn until(&amp;mut self, delim: u8, buf: &amp;mut String) -&gt; usize {
+        #[target_feature(enable = &quot;avx2,sse4.2&quot;)]
+        unsafe fn memchr(s: &amp;[u8], delim: u8) -&gt; Option&lt;usize&gt; {
+            s.iter().position(|&amp;b| b == delim)
+        }
+        let mut total = 0;
+        loop {
+            let len = unsafe { self.end.offset_from(self.cur) } as usize;
+            let range = unsafe { std::slice::from_raw_parts(self.cur, len) };
+            if let Some(i) = unsafe { memchr(range, delim) } {
+                unsafe { buf.as_mut_vec() }.extend_from_slice(&amp;range[..i]);
+                self.cur = unsafe { self.cur.add(i + 1) };
+                break total + i;
+            } else {
+                unsafe { buf.as_mut_vec() }.extend_from_slice(&amp;range);
+                self.cur = self.end;
+                self.try_refill(1);
+                total += len;
+            }
+        }
+    }
+    fn remain(&amp;self) -&gt; &amp;[u8] {
+        let len = unsafe { self.end.offset_from(self.cur) } as usize;
+        unsafe { std::slice::from_raw_parts(self.cur, len) }
+    }
+    fn discard(&amp;mut self, until: u8) -&gt; usize {
+        let mut len = 0;
+        #[target_feature(enable = &quot;avx2&quot;)]
+        unsafe fn index(s: &amp;[u8], b: u8) -&gt; Option&lt;usize&gt; {
+            s.iter().position(|&amp;c| c == b)
+        }
+        loop {
+            let pos = unsafe { index(self.remain(), until) };
+            if let Some(pos) = pos {
+                len += pos;
+                self.cur = unsafe { self.cur.add(pos + 1) };
+                break len;
+            }
+            len += unsafe { self.end.offset_from(self.cur) } as usize;
+            self.cur = self.end;
+            self.try_refill(1);
+        }
     }
 }
 struct Writer {
@@ -1249,18 +1217,7 @@ impl Writer {
         Self { buf, off: 0 }
     }
     fn flush(&amp;mut self) {
-        unsafe {
-            std::arch::asm!(
-                &quot;syscall&quot;,
-                inout(&quot;rax&quot;) 1 =&gt; _,
-                in(&quot;rdi&quot;) 1,
-                in(&quot;rsi&quot;) self.buf.as_ptr(),
-                in(&quot;rdx&quot;) self.off,
-                out(&quot;rcx&quot;) _,
-                out(&quot;r11&quot;) _,
-                options(readonly,preserves_flags)
-            )
-        }
+        unsafe { write(1, self.buf.as_ptr(), self.off) };
         self.off = 0;
     }
     fn try_flush(&amp;mut self, readahead: usize) {

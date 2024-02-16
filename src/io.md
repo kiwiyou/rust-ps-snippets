@@ -10,7 +10,7 @@ struct Reader {
 }
 impl Reader {
     fn new(capacity: usize) -> Self {
-        let begin = unsafe { mmap(0, capacity, 3, 2, 0, 0);
+        let begin = unsafe { mmap(0, capacity, 3, 2, 0, 0) };
         Self {
             begin,
             end: unsafe { begin.add(capacity) },

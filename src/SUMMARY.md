@@ -38,6 +38,7 @@
 - [Heavy-Light Decomposition](hld.md)
 - [Push-Relabel Flow](flow.md)
 - [Min Heap](heap.md)
+- [Shallowest Decomposition Tree](decomp-tree.md)
 
 # Strings
 

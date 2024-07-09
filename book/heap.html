@@ -174,131 +174,66 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="min-heap"><a class="header" href="#min-heap">Min Heap</a></h1>
-<ul>
-<li><code>pop()</code> - Returns (inserted index, key) pair.</li>
-</ul>
-<pre><code class="language-rs noplayground">struct MinHeap&lt;K&gt; {
-    k: Vec&lt;(u32, K)&gt;,
-    pos: Vec&lt;u32&gt;,
-    max: usize,
+<pre><code class="language-rs noplayground">struct MinHeap&lt;T&gt; {
+    data: Vec&lt;T&gt;,
 }
 
-impl&lt;K&gt; MinHeap&lt;K&gt;
-where
-    K: PartialOrd + Copy,
-{
+impl&lt;T: PartialOrd&gt; MinHeap&lt;T&gt; {
     fn new() -&gt; Self {
-        Self {
-            k: vec![],
-            pos: vec![],
-            max: 0,
-        }
+        Self { data: vec![] }
     }
-    fn len(&amp;self) -&gt; usize {
-        self.k.len()
+    fn peek(&amp;self) -&gt; Option&lt;&amp;T&gt; {
+        self.data.get(0)
     }
-    fn push(&amp;mut self, k: K) {
-        let i = self.max;
-        let len = self.len() as u32;
-        self.max += 1;
-        self.k.push((i as u32, k));
-        self.pos.push(len);
-        self.up(i);
-    }
-    fn pop(&amp;mut self) -&gt; Option&lt;(usize, K)&gt; {
-        if self.len() == 0 {
-            return None;
-        }
-        let (i, k) = self.k.swap_remove(0);
-        if self.len() &gt; 0 {
-            self.pos[self.k[0].0 as usize] = 0;
-            self.down(0);
-        }
-        Some((i as usize, k))
-    }
-    fn replace(&amp;mut self, i: usize, k: K) -&gt; K {
-        use std::cmp::Ordering::*;
-        let pos = self.pos[i] as usize;
-        let ordering = self.k[pos].1.partial_cmp(&amp;k).unwrap();
-        let prev = std::mem::replace(&amp;mut self.k[pos].1, k);
-        match ordering {
-            Greater =&gt; self.up(pos),
-            Less =&gt; self.down(pos),
-            Equal =&gt; {}
-        }
-        prev
-    }
-    fn up(&amp;mut self, mut pos: usize) {
-        while pos &gt; 0 {
-            let parent = (pos - 1) / 2;
-            if self.k[pos].1 &gt;= self.k[parent].1 {
-                break;
+    fn push(&amp;mut self, item: T) {
+        self.data.reserve(1);
+        unsafe {
+            let mut i = self.data.len();
+            self.data.set_len(i + 1);
+            while i &gt; 0 {
+                let p = (i - 1) &gt;&gt; 1;
+                if self.data.get_unchecked(p) &lt;= &amp;item {
+                    break;
+                }
+                let ip = self.data.as_mut_ptr().add(i);
+                let pp = self.data.as_ptr().add(p);
+                pp.copy_to_nonoverlapping(ip, 1);
+                i = p;
             }
-            self.k.swap(pos, parent);
-            self.pos[self.k[pos].0 as usize] = pos as u32;
-            pos = parent;
+            *self.data.get_unchecked_mut(i) = item;
         }
-        self.pos[self.k[pos].0 as usize] = pos as u32;
     }
-    fn down(&amp;mut self, mut pos: usize) {
-        let len = self.len();
-        loop {
-            let child = pos * 2 + 1;
-            if child &gt;= len {
-                break;
+    fn pop(&amp;mut self) -&gt; Option&lt;T&gt; {
+        let comp = self.data.pop()?;
+        if !self.data.is_empty() {
+            unsafe {
+                let item = self.data.as_ptr().add(0).read();
+                let mut i = 0;
+                let mut child = i &lt;&lt; 1 | 1;
+                while child + 1 &lt; self.data.len() {
+                    child += (self.data.get_unchecked(child) &gt; self.data.get_unchecked(child + 1)) as usize;
+                    if self.data.get_unchecked(child) &gt;= &amp;comp {
+                        break;
+                    }
+                    let ip = self.data.as_mut_ptr().add(i);
+                    let cp = self.data.as_ptr().add(child);
+                    cp.copy_to_nonoverlapping(ip, 1);
+                    i = child;
+                    child = i &lt;&lt; 1 | 1;
+                }
+                if child &lt; self.data.len() &amp;&amp; self.data.get_unchecked(child) &lt; &amp;comp {
+                    let ip = self.data.as_mut_ptr().add(i);
+                    let cp = self.data.as_ptr().add(child);
+                    cp.copy_to_nonoverlapping(ip, 1);
+                    i = child;
+                }
+                *self.data.get_unchecked_mut(i) = comp;
+                Some(item)
             }
-            let less = if child + 1 == len || self.k[child].1 &lt;= self.k[child + 1].1 {
-                child
-            } else {
-                child + 1
-            };
-            if self.k[pos].1 &lt;= self.k[less].1 {
-                break;
-            }
-            self.k.swap(less, pos);
-            self.pos[self.k[pos].0 as usize] = pos as u32;
-            pos = less;
-        }
-        self.pos[self.k[pos].0 as usize] = pos as u32;
-    }
-}
-
-impl&lt;K&gt; FromIterator&lt;K&gt; for MinHeap&lt;K&gt;
-where
-    K: PartialOrd + Copy,
-{
-    fn from_iter&lt;T: IntoIterator&lt;Item = K&gt;&gt;(iter: T) -&gt; Self {
-        let k: Vec&lt;_&gt; = iter
-            .into_iter()
-            .enumerate()
-            .map(|(i, v)| (i as u32, v))
-            .collect();
-        let len = k.len();
-        let pos = (0..len as u32).collect();
-        let mut inst = Self { k, pos, max: len };
-        for i in (0..inst.len()).rev() {
-            inst.down(i);
-        }
-        inst
-    }
-}
-</code></pre>
-<h2 id="example"><a class="header" href="#example">Example</a></h2>
-<p>Single Source Shortest Path (Dijkstra's)</p>
-<pre><code class="language-rs noplayground">fn sssp(g: &amp;Graph, w: &amp;[u32], s: usize) -&gt; Vec&lt;u32&gt; {
-    let mut d = vec![u32::MAX; g.head.len()];
-    d[s] = 0;
-    let mut heap = d.iter().map(|&amp;d| d).collect::&lt;MinHeap&lt;_&gt;&gt;();
-    while let Some((u, du)) = heap.pop() {
-        for (e, v) in g.neighbor(u) {
-            let dv = du + w[e &gt;&gt; 1] as u32;
-            if d[v] &gt; dv {
-                d[v] = dv;
-                heap.replace(v, dv);
-            }
+        } else {
+            Some(comp)
         }
     }
-    d
 }
 </code></pre>
 

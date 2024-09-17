@@ -15,10 +15,12 @@ struct Graph {
 
 impl Graph {
     fn new(v: usize, e: usize) -> Self {
-        Self {
-            head: vec![u32::MAX; v],
-            link: Vec::with_capacity(e),
-        }
+        let mut head = vec![];
+        head.reserve_exact(v);
+        head.resize(v, u32::MAX);
+        let mut link = vec![];
+        link.reserve_exact(e);
+        Self { head, link }
     }
     fn connect(&mut self, from: usize, to: usize) {
         let prev = self.head[from];

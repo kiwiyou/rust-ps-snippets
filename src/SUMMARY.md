@@ -39,6 +39,7 @@
 - [Push-Relabel Flow](flow.md)
 - [Min Heap](heap.md)
 - [Shallowest Decomposition Tree](decomp-tree.md)
+- [Strongly Connected Components](scc.md)
 
 # Strings
 

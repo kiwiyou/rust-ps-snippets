@@ -6,7 +6,7 @@ enum Clause {
     Pos(usize),
     Neg(usize),
 }
- 
+
 impl Clause {
     fn as_index(&self) -> usize {
         match self {
@@ -14,7 +14,7 @@ impl Clause {
             Self::Neg(i) => i << 1,
         }
     }
- 
+
     fn inv(&self) -> Self {
         match *self {
             Self::Pos(i) => Self::Neg(i),
@@ -22,93 +22,85 @@ impl Clause {
         }
     }
 }
- 
-#[derive(Default)]
-struct SAT {
-    head: Vec<u32>,
-    link: Vec<u32>,
-    end: Vec<u32>,
-}
- 
+
+struct SAT(Graph);
+
 impl SAT {
-    fn reserve_clause(&mut self, n: usize) {
-        self.head.resize(self.head.len() + n * 2, u32::MAX);
-    }
- 
     fn or(&mut self, l: Clause, r: Clause) {
-        self.connect(l.inv().as_index(), r.as_index());
-        self.connect(r.inv().as_index(), l.as_index());
+        self.0.connect(l.inv().as_index(), r.as_index());
+        self.0.connect(r.inv().as_index(), l.as_index());
     }
- 
+
     fn imply(&mut self, l: Clause, r: Clause) {
-        self.connect(l.as_index(), r.as_index());
-        self.connect(r.inv().as_index(), l.inv().as_index());
+        self.0.connect(l.as_index(), r.as_index());
+        self.0.connect(r.inv().as_index(), l.inv().as_index());
     }
- 
-    fn connect(&mut self, from: usize, to: usize) {
-        let p = self.head[from];
-        self.head[from] = self.link.len() as u32;
-        self.link.push(p);
-        self.end.push(to as u32);
-    }
- 
+
     fn try_assign(&self) -> Option<Vec<bool>> {
-        let n = self.head.len();
-        let mut c = 0;
-        let mut s = vec![];
-        let mut p = vec![];
-        let mut pre = vec![u32::MAX; n];
-        let mut comp = vec![u32::MAX; n];
-        let mut next = 0;
-        for i in 0..n {
-            if pre[i] != u32::MAX {
+        let v = self.0.head.len();
+        let mut scc = vec![];
+        scc.reserve_exact(v);
+        scc.resize(v, u32::MAX);
+        let mut stack = vec![];
+        stack.reserve_exact(v);
+        let mut dfs = vec![];
+        dfs.reserve_exact(v);
+        let mut i = v as u32;
+        let mut component = 0;
+        for u in 0..v {
+            if scc[u] != u32::MAX {
                 continue;
             }
-            pre[i] = c;
-            c += 1;
-            let mut dfs = vec![(i as u32, self.head[i])];
-            s.push(i as u32);
-            p.push(i as u32);
-            while let Some((u, e)) = dfs.last_mut() {
-                if let Some(&v) = self.end.get(*e as usize) {
-                    if pre[v as usize] == u32::MAX {
-                        pre[v as usize] = c;
-                        c += 1;
-                        s.push(v);
-                        p.push(v);
-                        dfs.push((v, self.head[v as usize]));
+            dfs.push(((u as u32) << 1, self.0.head[u]));
+            i -= 1;
+            scc[u] = i;
+            while let Some((vu, eu)) = dfs.last_mut() {
+                let u = *vu as usize >> 1;
+                let is_root = *vu & 1 == 0;
+                if let Some(&(ev, v)) = self.0.link.get(*eu as usize) {
+                    *eu = ev;
+                    if scc[v as usize] != u32::MAX {
+                        if scc[v as usize] > scc[u] {
+                            scc[u] = scc[v as usize];
+                            *vu |= 1;
+                        }
                         continue;
-                    } else if comp[v as usize] == u32::MAX {
-                        while let Some(&w) = p.last() {
-                            if pre[w as usize] <= pre[v as usize] {
+                    }
+                    dfs.push((v << 1, self.0.head[v as usize]));
+                    i -= 1;
+                    scc[v as usize] = i;
+                } else {
+                    dfs.pop();
+                    if is_root {
+                        i += 1;
+                        while let Some(&v) = stack.last() {
+                            if scc[v as usize] > scc[u] {
                                 break;
                             }
-                            p.pop();
-                        }
-                    }
-                    *e = self.link[*e as usize];
-                } else {
-                    if Some(&*u) == p.last() {
-                        p.pop();
-                        while let Some(v) = s.pop() {
-                            if comp[v as usize ^ 1] == next {
+                            if v as usize ^ u == 1 {
                                 return None;
                             }
-                            comp[v as usize] = next;
-                            if v == *u {
-                                break;
-                            }
+                            stack.pop();
+                            scc[v as usize] = component;
+                            i += 1;
                         }
-                        next += 1;
+                        scc[u as usize] = component;
+                        component += 1;
+                    } else {
+                        stack.push(u as u32);
                     }
-                    dfs.pop();
-                    if let Some((_, e)) = dfs.last_mut() {
-                        *e = self.link[*e as usize];
+                    let v = u;
+                    if let Some((vu, _)) = dfs.last_mut() {
+                        let u = *vu as usize >> 1;
+                        if scc[v] > scc[u] {
+                            scc[u] = scc[v];
+                            *vu |= 1;
+                        }
                     }
                 }
             }
         }
-        Some(comp.chunks(2).map(|c| c[0] > c[1]).collect())
+        Some(scc.chunks_exact(2).map(|c| c[0] > c[1]).collect())
     }
 }
 ```

@@ -23,7 +23,7 @@ export default component$(() => {
 						href={`${import.meta.env.BASE_URL}manifest.json`}
 					/>
 				)}
-				<script src="https://code.iconify.design/iconify-icon/3.0.0/iconify-icon.min.js"></script>
+				<script src="https://code.iconify.design/iconify-icon/3.0.2/iconify-icon.min.js"></script>
 				<RouterHead />
 			</head>
 			<body lang="en">

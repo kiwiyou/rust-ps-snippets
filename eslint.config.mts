@@ -46,6 +46,9 @@ const ignores = [
 	"**/server",
 	"eslint.config.js",
 	".prettierrc.mts",
+	// Panda CSS
+	"src/styled-system",
+	"panda.config.ts",
 ];
 
 export default tseslint.config(

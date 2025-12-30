@@ -1,0 +1,27 @@
+name: Check
+on: [pull_request]
+jobs:
+  lint:
+    name: Format and Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: true
+      - name: Check format
+        run: pnpm run fmt.check
+      - name: Lint
+        run: pnpm run lint
+  build:
+    if: ${{ github.base.ref == 'main' }}
+    needs: lint
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: true
+      - name: Build
+        run: pnpm run build

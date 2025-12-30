@@ -8,6 +8,7 @@
 	"engines": {
 		"node": ">=25"
 	},
+	"packageManager": "pnpm@10.26.2",
 	"private": true,
 	"type": "module",
 	"scripts": {

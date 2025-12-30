@@ -9,6 +9,10 @@ jobs:
       - uses: pnpm/action-setup@v4
         with:
           run_install: true
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: package.json
+          cache: pnpm
       - name: Check format
         run: pnpm run fmt.check
       - name: Lint
@@ -23,5 +27,9 @@ jobs:
       - uses: pnpm/action-setup@v4
         with:
           run_install: true
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: package.json
+          cache: pnpm
       - name: Build
         run: pnpm run build

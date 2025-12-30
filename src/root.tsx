@@ -3,6 +3,7 @@ import { QwikCityProvider, RouterOutlet } from "@builder.io/qwik-city";
 import { RouterHead } from "./components/router-head/router-head";
 
 import "./global.css";
+import "iconify-icon";
 
 export default component$(() => {
 	/**
@@ -22,6 +23,7 @@ export default component$(() => {
 						href={`${import.meta.env.BASE_URL}manifest.json`}
 					/>
 				)}
+				<script src="https://code.iconify.design/iconify-icon/3.0.0/iconify-icon.min.js"></script>
 				<RouterHead />
 			</head>
 			<body lang="en">

@@ -45,4 +45,3 @@
 
 - [KMP](kmp.md)
 - [Regex](regex.md)
-

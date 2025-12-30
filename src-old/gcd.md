@@ -31,4 +31,3 @@ fn egcd(mut a: i64, mut b: i64) -> (i64, i64, i64) {
     (a, x, y)
 }
 ```
-

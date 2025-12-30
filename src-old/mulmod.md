@@ -12,7 +12,7 @@ fn mulmod(a: u64, b: u64, c: u64) -> (u64, u64) {
             inout("rax") a => quot,
             b = in(reg) b,
             c = in(reg) c,
-            out("rdx") rem, 
+            out("rdx") rem,
             options(nomem, pure)
         )
     };
